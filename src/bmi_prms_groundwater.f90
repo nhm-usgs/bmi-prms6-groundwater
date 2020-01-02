@@ -515,37 +515,37 @@
     
       select case(name)
       case("pkwater_equiv")
-         size = sizeof(this%model%model_simulation%climate%pkwater_equiv(1))  ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%climate%pkwater_equiv)  ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("hru_intcpstor")
-         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor(1))             ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor)             ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("soil_moist_tot")
-         size = sizeof(this%model%model_simulation%soil%soil_moist_tot(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%soil_moist_tot)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("soil_to_gw")
-         size = sizeof(this%model%model_simulation%soil%soil_to_gw(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%soil_to_gw)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("ssr_to_gw")
-         size = sizeof(this%model%model_simulation%soil%ssr_to_gw(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%ssr_to_gw)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("ssres_flow")
-         size = sizeof(this%model%model_simulation%soil%ssres_flow(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%ssres_flow)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("dprst_seep_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("dprst_stor_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("hru_impervstor")
-         size = sizeof(this%model%model_simulation%runoff%hru_impervstor(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%hru_impervstor)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("sroff")
-         size = sizeof(this%model%model_simulation%runoff%sroff(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%sroff)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case("gwres_flow")
-         size = sizeof(this%model%model_simulation%groundwater%gwres_flow(1))                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%groundwater%gwres_flow)                ! 'sizeof' in gcc & ifort
          bmi_status = BMI_SUCCESS
       case('basin_gwflow')
           size = sizeof(this%model%model_simulation%groundwater%basin_gwflow) 
