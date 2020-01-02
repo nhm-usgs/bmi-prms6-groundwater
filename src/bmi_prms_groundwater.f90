@@ -793,28 +793,28 @@
     
       select case(name)
       case("hru_intcpstor")
-         this%model%model_simulation%intcp%hru_intcpstor = src(1)
+         this%model%model_simulation%intcp%hru_intcpstor = src
          bmi_status = BMI_SUCCESS
       case("soil_moist_tot")
-         this%model%model_simulation%soil%soil_moist_tot = src(1)
+         this%model%model_simulation%soil%soil_moist_tot = src
          bmi_status = BMI_SUCCESS
       case("soil_to_gw")
-         this%model%model_simulation%soil%soil_to_gw = src(1)
+         this%model%model_simulation%soil%soil_to_gw = src
          bmi_status = BMI_SUCCESS
       case("ssr_to_gw")
-         this%model%model_simulation%soil%ssr_to_gw = src(1)
+         this%model%model_simulation%soil%ssr_to_gw = src
          bmi_status = BMI_SUCCESS
       case("ssres_flow")
-         this%model%model_simulation%soil%ssres_flow = src(1)
+         this%model%model_simulation%soil%ssres_flow = src
          bmi_status = BMI_SUCCESS
       case("hru_impervstor")
-         this%model%model_simulation%runoff%hru_impervstor = src(1)
+         this%model%model_simulation%runoff%hru_impervstor = src
          bmi_status = BMI_SUCCESS
       case("sroff")
-         this%model%model_simulation%runoff%sroff = src(1)
+         this%model%model_simulation%runoff%sroff = src
          bmi_status = BMI_SUCCESS
       case("gwres_flow")
-         this%model%model_simulation%groundwater%gwres_flow = src(1)
+         this%model%model_simulation%groundwater%gwres_flow = src
          bmi_status = BMI_SUCCESS
       case default
          bmi_status = BMI_FAILURE
@@ -830,13 +830,13 @@
     
       select case(name)
       case("pkwater_equiv")
-         this%model%model_simulation%climate%pkwater_equiv = src(1)
+         this%model%model_simulation%climate%pkwater_equiv = src
          bmi_status = BMI_SUCCESS
       case("dprst_seep_hru")
-         this%model%model_simulation%runoff%dprst_seep_hru = src(1)
+         this%model%model_simulation%runoff%dprst_seep_hru = src
          bmi_status = BMI_SUCCESS
       case("dprst_stor_hru")
-         this%model%model_simulation%runoff%dprst_stor_hru = src(1)
+         this%model%model_simulation%runoff%dprst_stor_hru = src
          bmi_status = BMI_SUCCESS
       case default
          bmi_status = BMI_FAILURE
