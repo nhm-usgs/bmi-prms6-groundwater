@@ -45,20 +45,20 @@
          get_value_int, &
          get_value_float, &
          get_value_double
-    !procedure :: get_value_ref_int => prms_get_ref_int
-    !procedure :: get_value_ref_float => prms_get_ref_float
-    !procedure :: get_value_ref_double => prms_get_ref_double
-    !generic :: get_value_ref => &
-    !     get_value_ref_int, &
-    !     get_value_ref_float, &
-    !     get_value_ref_double
-    !procedure :: get_value_at_indices_int => prms_get_at_indices_int
-    !procedure :: get_value_at_indices_float => prms_get_at_indices_float
-    !procedure :: get_value_at_indices_double => prms_get_at_indices_double
-    !generic :: get_value_at_indices => &
-    !     get_value_at_indices_int, &
-    !     get_value_at_indices_float, &
-    !     get_value_at_indices_double
+    procedure :: get_value_ptr_int => prms_get_ptr_int
+    procedure :: get_value_ptr_float => prms_get_ptr_float
+    procedure :: get_value_ptr_double => prms_get_ptr_double
+    generic :: get_value_ptr => &
+         get_value_ptr_int, &
+         get_value_ptr_float, &
+         get_value_ptr_double
+    procedure :: get_value_at_indices_int => prms_get_at_indices_int
+    procedure :: get_value_at_indices_float => prms_get_at_indices_float
+    procedure :: get_value_at_indices_double => prms_get_at_indices_double
+    generic :: get_value_at_indices => &
+         get_value_at_indices_int, &
+         get_value_at_indices_float, &
+         get_value_at_indices_double
     procedure :: set_value_int => prms_set_int
     procedure :: set_value_float => prms_set_float
     procedure :: set_value_double => prms_set_double
@@ -66,13 +66,13 @@
          set_value_int, &
          set_value_float, &
          set_value_double
-    !procedure :: set_value_at_indices_int => prms_set_at_indices_int
-    !procedure :: set_value_at_indices_float => prms_set_at_indices_float
-    !procedure :: set_value_at_indices_double => prms_set_at_indices_double
-    !generic :: set_value_at_indices => &
-    !     set_value_at_indices_int, &
-    !     set_value_at_indices_float, &
-    !     set_value_at_indices_double
+    procedure :: set_value_at_indices_int => prms_set_at_indices_int
+    procedure :: set_value_at_indices_float => prms_set_at_indices_float
+    procedure :: set_value_at_indices_double => prms_set_at_indices_double
+    generic :: set_value_at_indices => &
+         set_value_at_indices_int, &
+         set_value_at_indices_float, &
+         set_value_at_indices_double
     !procedure :: print_model_info
     end type bmi_prms_groundwater
 
@@ -283,12 +283,6 @@
     case('basin_gwflow')
         grid = 1
         bmi_status = BMI_SUCCESS
-    !case('seg_gwflow', 'seg_inflow', 'seg_outflow')
-    !    grid = 1
-    !    bmi_status = BMI_SUCCESS
-        !case('model__identification_number')
-        !   type = 1
-        !   bmi_status = BMI_SUCCESS
         case default
         grid = -1
         bmi_status = BMI_FAILURE
@@ -472,9 +466,6 @@
     case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', 'basin_gwflow')
         type = "double"
         bmi_status = BMI_SUCCESS
-    !case("is_rain_day")
-    !    type = "integer"
-    !    bmi_status = BMI_SUCCESS
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -494,12 +485,6 @@
         'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', 'basin_gwflow')
         units = "in"
         bmi_status = BMI_SUCCESS
-    !case("seg_inflow", "seg_outflow")
-    !    units = "ft3 s-1"
-    !    bmi_status = BMI_SUCCESS
-    !case("is_rain_day")
-    !    units = "none"
-    !    bmi_status = BMI_SUCCESS
     case default
         units = "-"
         bmi_status = BMI_FAILURE
@@ -629,9 +614,6 @@
       !   ! See https://stackoverflow.com/a/11800068/1563298
       !   dest = reshape(this%model%temperature, [this%model%n_x*this%model%n_y])
          bmi_status = BMI_SUCCESS
-      !case("plate_surface__thermal_diffusivity")
-      !   dest = [this%model%alpha]
-      !   bmi_status = BMI_SUCCESS
       case default
          dest = [-1.0]
          bmi_status = BMI_FAILURE
@@ -640,134 +622,155 @@
     
     ! Get a copy of a double variable's values, flattened.
     function prms_get_double(this, name, dest) result (bmi_status)
-      class (bmi_prms_groundwater), intent(in) :: this
-      character (len=*), intent(in) :: name
-      double precision, intent(inout) :: dest(:)
-      integer :: bmi_status
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    double precision, intent(inout) :: dest(:)
+    integer :: bmi_status
     
-      select case(name)
-      case('basin_gwflow')
-          dest = [this%model%model_simulation%groundwater%basin_gwflow]
-          bmi_status = BMI_FAILURE
-      !case("plate_surface__temperature")
-      case default
-         dest = [-1.d0]
-         bmi_status = BMI_FAILURE
+    select case(name)
+    case('basin_gwflow')
+        dest = [this%model%model_simulation%groundwater%basin_gwflow]
+        bmi_status = BMI_FAILURE
+    case default
+        dest = [-1.d0]
+        bmi_status = BMI_FAILURE
       end select
     end function prms_get_double
     
-    !! Get a reference to an integer-valued variable, flattened.
-    !function prms_get_ref_int(this, name, dest) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  integer, pointer, intent(inout) :: dest(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) :: src
-    !  integer :: n_elements
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_ref_int
+    function prms_get_ptr_int(this, name, dest_ptr) result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    integer, pointer, intent(inout) :: dest_ptr(:)
+    integer :: bmi_status, status
+    type (c_ptr) :: src
+    integer :: n_elements, gridid
+        
+    status = this%get_var_grid(name,gridid)
+    status = this%get_grid_size(gridid, n_elements)
+
+    select case(name)
+    !case('nowtime')
+    !    src = c_loc(this%model%model_simulation%model_time%nowtime(1))
+    !    call c_f_pointer(src, dest_ptr, [n_elements])
+    !    bmi_status = BMI_SUCCESS
+    case default
+       bmi_status = BMI_FAILURE
+    end select
+
+    end function prms_get_ptr_int
     !
     !! Get a reference to a real-valued variable, flattened.
-    !function prms_get_ref_float(this, name, dest) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  real, pointer, intent(inout) :: dest(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) :: src
-    !  integer :: n_elements
-    !
-    !  select case(name)
-    !  case("plate_surface__temperature")
-    !     src = c_loc(this%model%temperature(1,1))
-    !     n_elements = this%model%n_y * this%model%n_x
-    !     call c_f_pointer(src, dest, [n_elements])
-    !     bmi_status = BMI_SUCCESS
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_ref_float
+    function prms_get_ptr_float(this, name, dest_ptr) result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    real, pointer, intent(inout) :: dest_ptr(:)
+    integer :: bmi_status
+    type (c_ptr) :: src
+    integer :: n_elements, gridid, status
+        
+    status = this%get_var_grid(name,gridid)
+    status = this%get_grid_size(gridid, n_elements)
+
+    select case(name)
+    case('gwres_flow')
+        src = c_loc(this%model%model_simulation%groundwater%gwres_flow(1))
+        call c_f_pointer(src, dest_ptr, [n_elements])
+        bmi_status = BMI_SUCCESS
+    case default
+        bmi_status = BMI_FAILURE
+    end select
+    end function prms_get_ptr_float
     !
     !! Get a reference to an double-valued variable, flattened.
-    !function prms_get_ref_double(this, name, dest) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  double precision, pointer, intent(inout) :: dest(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) :: src
-    !  integer :: n_elements
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_ref_double
-    !
-    !! Get values of an integer variable at the given locations.
-    !function prms_get_at_indices_int(this, name, dest, indices) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  integer, intent(inout) :: dest(:)
-    !  integer, intent(in) :: indices(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) src
-    !  integer, pointer :: src_flattened(:)
-    !  integer :: i, n_elements
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_at_indices_int
-    !
-    !! Get values of a real variable at the given locations.
-    !function prms_get_at_indices_float(this, name, dest, indices) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  real, intent(inout) :: dest(:)
-    !  integer, intent(in) :: indices(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) src
-    !  real, pointer :: src_flattened(:)
-    !  integer :: i, n_elements
-    !
-    !  select case(name)
-    !  case("plate_surface__temperature")
-    !     src = c_loc(this%model%temperature(1,1))
-    !     call c_f_pointer(src, src_flattened, [this%model%n_y * this%model%n_x])
-    !     n_elements = size(indices)
-    !     do i = 1, n_elements
-    !        dest(i) = src_flattened(indices(i))
-    !     end do
-    !     bmi_status = BMI_SUCCESS
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_at_indices_float
-    !
-    !! Get values of a double variable at the given locations.
-    !function prms_get_at_indices_double(this, name, dest, indices) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  character (len=*), intent(in) :: name
-    !  double precision, intent(inout) :: dest(:)
-    !  integer, intent(in) :: indices(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) src
-    !  double precision, pointer :: src_flattened(:)
-    !  integer :: i, n_elements
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_get_at_indices_double
-    !
+    function prms_get_ptr_double(this, name, dest_ptr) result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    double precision, pointer, intent(inout) :: dest_ptr(:)
+    integer :: bmi_status
+    type (c_ptr) :: src
+    integer :: n_elements, status, gridid
+    
+    status = this%get_var_grid(name,gridid)
+    status = this%get_grid_size(gridid, n_elements)
+
+    select case(name)
+        !value below dimed by 1 not really necessary to get ptr?
+    !case('basin_gwflow')
+    !    src = c_loc(this%model%model_simulation%groundwater%basin_gwflow(1))
+    !    call c_f_pointer(src, dest_ptr, [n_elements])
+    !    bmi_status = BMI_SUCCESS
+    case default
+        bmi_status = BMI_FAILURE
+    end select
+    end function prms_get_ptr_double
+    
+    ! Get values of an integer variable at the given locations.
+    function prms_get_at_indices_int(this, name, dest, inds) &
+         result (bmi_status)
+      class (bmi_prms_groundwater), intent(in) :: this
+      character (len=*), intent(in) :: name
+      integer, intent(inout) :: dest(:)
+      integer, intent(in) :: inds(:)
+      integer :: bmi_status
+      type (c_ptr) src
+      integer, pointer :: src_flattened(:)
+      integer :: i, n_elements, status, gridid
+    
+      select case(name)
+      case default
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_get_at_indices_int
+    
+    ! Get values of a real variable at the given locations.
+    function prms_get_at_indices_float(this, name, dest, inds) &
+         result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    real, intent(inout) :: dest(:)
+    integer, intent(in) :: inds(:)
+    integer :: bmi_status
+    type (c_ptr) src
+    real, pointer :: src_flattened(:)
+    integer :: i, n_elements, status, gridid
+        
+    status = this%get_var_grid(name,gridid)
+    status = this%get_grid_size(gridid, n_elements)
+
+    select case(name)
+    case('gwres_flow')
+        src = c_loc(this%model%model_simulation%groundwater%gwres_flow(1))
+        call c_f_pointer(src, src_flattened, [n_elements])
+        do i = 1,  size(inds)
+            dest(i) = src_flattened(inds(i))
+        end do
+        bmi_status = BMI_SUCCESS
+    case default
+        bmi_status = BMI_FAILURE
+    end select
+    end function prms_get_at_indices_float
+    
+    ! Get values of a double variable at the given locations.
+    function prms_get_at_indices_double(this, name, dest, inds) &
+         result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    character (len=*), intent(in) :: name
+    double precision, intent(inout) :: dest(:)
+    integer, intent(in) :: inds(:)
+    integer :: bmi_status
+    type (c_ptr) src
+    double precision, pointer :: src_flattened(:)
+    integer :: i, n_elements, status, gridid
+        
+    status = this%get_var_grid(name,gridid)
+    status = this%get_grid_size(gridid, n_elements)
+
+    select case(name)
+    case default
+        bmi_status = BMI_FAILURE
+    end select
+    end function prms_get_at_indices_double
+    
     ! Set new integer values.
     function prms_set_int(this, name, src) result (bmi_status)
       class (bmi_prms_groundwater), intent(inout) :: this
@@ -843,66 +846,151 @@
       end select
     end function prms_set_double
     
-    !! Set integer values at particular locations.
-    !function prms_set_at_indices_int(this, name, indices, src) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(inout) :: this
-    !  character (len=*), intent(in) :: name
-    !  integer, intent(in) :: indices(:)
-    !  integer, intent(in) :: src(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) dest
-    !  integer, pointer :: dest_flattened(:)
-    !  integer :: i
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_set_at_indices_int
-    !
-    !! Set real values at particular locations.
-    !function prms_set_at_indices_float(this, name, indices, src) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(inout) :: this
-    !  character (len=*), intent(in) :: name
-    !  integer, intent(in) :: indices(:)
-    !  real, intent(in) :: src(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) dest
-    !  real, pointer :: dest_flattened(:)
-    !  integer :: i
-    !
-    !  select case(name)
-    !  !case("plate_surface__temperature")
-    !  !   dest = c_loc(this%model%temperature(1,1))
-    !  !   call c_f_pointer(dest, dest_flattened, [this%model%n_y * this%model%n_x])
-    !  !   do i = 1, size(indices)
-    !  !      dest_flattened(indices(i)) = src(i)
-    !  !   end do
-    !  !   bmi_status = BMI_SUCCESS
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_set_at_indices_float
-    !
-    !! Set double values at particular locations.
-    !function prms_set_at_indices_double(this, name, indices, src) &
-    !     result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(inout) :: this
-    !  character (len=*), intent(in) :: name
-    !  integer, intent(in) :: indices(:)
-    !  double precision, intent(in) :: src(:)
-    !  integer :: bmi_status
-    !  type (c_ptr) dest
-    !  double precision, pointer :: dest_flattened(:)
-    !  integer :: i
-    !
-    !  select case(name)
-    !  case default
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_set_at_indices_double
+    ! Set integer values at particular locations.
+    function prms_set_at_indices_int(this, name, inds, src) &
+         result (bmi_status)
+      class (bmi_prms_groundwater), intent(inout) :: this
+      character (len=*), intent(in) :: name
+      integer, intent(in) :: inds(:)
+      integer, intent(in) :: src(:)
+      integer :: bmi_status
+      type (c_ptr) dest
+      integer, pointer :: dest_flattened(:)
+      integer :: i
+    
+      select case(name)
+      case default
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_set_at_indices_int
+    
+    ! Set real values at particular locations.
+    function prms_set_at_indices_float(this, name, inds, src) &
+         result (bmi_status)
+      class (bmi_prms_groundwater), intent(inout) :: this
+      character (len=*), intent(in) :: name
+      integer, intent(in) :: inds(:)
+      real, intent(in) :: src(:)
+      integer :: bmi_status
+      type (c_ptr) dest
+      real, pointer :: dest_flattened(:)
+      integer :: i, n_elements, status, gridid
+    
+      status = this%get_var_grid(name, gridid)
+      status = this%get_grid_size(gridid, n_elements)
+
+      select case(name)
+      !case("plate_surface__temperature")
+      !   dest = c_loc(this%model%temperature(1,1))
+      !   call c_f_pointer(dest, dest_flattened, [this%model%n_y * this%model%n_x])
+      !   do i = 1, size(indices)
+      !      dest_flattened(indices(i)) = src(i)
+      !   end do
+      !   bmi_status = BMI_SUCCESS
+          
+          !Values below are input from surface and soil to groundwater
+      case("hru_intcpstor")
+        dest = c_loc(this%model%model_simulation%intcp%hru_intcpstor(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("soil_moist_tot")
+        dest = c_loc(this%model%model_simulation%soil%soil_moist_tot(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("soil_to_gw")
+        dest = c_loc(this%model%model_simulation%soil%soil_to_gw(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("ssr_to_gw")
+        dest = c_loc(this%model%model_simulation%soil%ssr_to_gw(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("ssres_flow")
+        dest = c_loc(this%model%model_simulation%soil%ssres_flow(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("hru_impervstor")
+        dest = c_loc(this%model%model_simulation%runoff%hru_impervstor(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("sroff")
+        dest = c_loc(this%model%model_simulation%runoff%sroff(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("gwres_flow")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_flow(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case default
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_set_at_indices_float
+    
+    ! Set double values at particular locations.
+    function prms_set_at_indices_double(this, name, inds, src) &
+         result (bmi_status)
+      class (bmi_prms_groundwater), intent(inout) :: this
+      character (len=*), intent(in) :: name
+      integer, intent(in) :: inds(:)
+      double precision, intent(in) :: src(:)
+      integer :: bmi_status
+      type (c_ptr) dest
+      double precision, pointer :: dest_flattened(:)
+      integer :: i, n_elements, status, gridid
+    
+      status = this%get_var_grid(name, gridid)
+      status = this%get_grid_size(gridid, n_elements)
+
+      select case(name)
+      case("pkwater_equiv")
+        dest = c_loc(this%model%model_simulation%climate%pkwater_equiv(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("dprst_seep_hru")
+        dest = c_loc(this%model%model_simulation%runoff%dprst_seep_hru(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("dprst_stor_hru")
+        dest = c_loc(this%model%model_simulation%runoff%dprst_stor_hru(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case default
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_set_at_indices_double
     
     !! A non-BMI procedure for model introspection.
     !subroutine print_model_info(this)
