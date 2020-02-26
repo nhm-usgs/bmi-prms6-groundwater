@@ -84,55 +84,54 @@
 
     ! Exchange items
     integer, parameter :: input_item_count = 15
-    integer, parameter :: output_item_count = 16
+    integer, parameter :: output_item_count = 15
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(input_item_count) :: input_items = (/ &
         
     !vars below required input to groundwater module from surface and soil modules
     !vars from climate
-    'pkwater_equiv', & !r64 by nhru
+    'pkwater_equiv     ', & !r64 by nhru
     
     !vars from intcp
-    'hru_intcpstor', & !r32 by nhru
+    'hru_intcpstor     ', & !r32 by nhru
     
     !vars from soil
-    'soil_moist_tot', & !r32 by nhru
-    'soil_to_gw', & !r32 by nhru
-    'ssr_to_gw', & !r32 by nhru
-    'ssres_flow', & !r32 by nhru
+    'soil_moist_tot    ', & !r32 by nhru
+    'soil_to_gw        ', & !r32 by nhru
+    'ssr_to_gw         ', & !r32 by nhru
+    'ssres_flow        ', & !r32 by nhru
     
     !vars from runoff
-    'dprst_seep_hru', & !r64  by nhru
-    'dprst_stor_hru', & !r64 by nhru
-    'hru_impervstor', & !r32 by nhru
-    'sroff', & !r32 by nhru
+    'dprst_seep_hru    ', & !r64  by nhru
+    'dprst_stor_hru    ', & !r64 by nhru
+    'hru_impervstor    ', & !r32 by nhru
+    'sroff             ', & !r32 by nhru
         !input vars that could be used in calibration
-    'gwsink_coef', & !r32 by ngw
-    'gwflow_coef', & !r32 by ngw
-    'gwres_flow', & !r32 by nhru
-    'gwres_sink', & !r32 by nhru
-    'gwres_stor' & !r64 by nhru
+    'gwsink_coef       ', & !r32 by ngw
+    'gwflow_coef       ', & !r32 by ngw
+    'gwres_flow        ', & !r32 by nhru
+    'gwres_sink        ', & !r32 by nhru
+    'gwres_stor        ' & !r64 by nhru
     /) 
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(output_item_count) :: output_items = (/ &
         !vars required for streamflow module from this(groundwater)
-    'gwres_flow', & !r32 by nhru
-    'basin_gwflow', & !r64 by 1
+    'gwres_flow        ', & !r32 by nhru
         !output vars used in calibration
-    'gwsink_coef', & !r32 by nhru
-    'gflow_coef', & !r32 by nhru
+    'gwsink_coef       ', & !r32 by nhru
+    'gflow_coef        ', & !r32 by nhru
         !output vars used in water-balanc module
-    'gwin_dprst', & !r64 by nhru
-    'gwres_in', & !r64 by nhru
-    'gwres_stor', & !r64 by nhru
-    'gwres_stor_ante', & !r64 by nhru
-    'gwstor_minarea_wb', & !r64 by nhru
-    'gw_upslope', & !r64 by nhru
+    'gwin_dprst        ', & !r64 by nhru
+    'gwres_in          ', & !r64 by nhru
+    'gwres_stor        ', & !r64 by nhru
+    'gwres_stor_ante   ', & !r64 by nhru
+    'gwstor_minarea_wb ', & !r64 by nhru
+    'gw_upslope        ', & !r64 by nhru
     'hru_gw_cascadeflow', & !r32 by nhru
-    'hru_storage', & !r64 by nhru
-    'hru_storage_ante', & !r64 by nhru
-    'gwres_flow', & !r32 by nhru
-    'gwres_sink', & !r32 by nhru
+    'hru_storage       ', & !r64 by nhru
+    'hru_storage_ante  ', & !r64 by nhru
+    'gwres_flow        ', & !r32 by nhru
+    'gwres_sink        ', & !r32 by nhru
     'has_gwstor_minarea' & !logical by 1
     /) 
 
@@ -305,11 +304,8 @@
         'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow')
         grid = 0
         bmi_status = BMI_SUCCESS
-    case('basin_gwflow')
-        grid = 1
-        bmi_status = BMI_SUCCESS
     case('gwsink_coef', 'gwflow_coef')
-        grid = 2
+        grid = 1
         bmi_status = BMI_SUCCESS
         case default
         grid = -1
@@ -328,10 +324,7 @@
     case(0)
         type = "vector"
         bmi_status = BMI_SUCCESS
-    case(1)
-        type = "scalar"
-        bmi_status = BMI_SUCCESS
-     case(2)
+     case(1)
         type = "vector"
         bmi_status = BMI_SUCCESS
     case default
@@ -352,9 +345,6 @@
         rank = 1
         bmi_status = BMI_SUCCESS
     case(1)
-        rank = 0
-        bmi_status = BMI_SUCCESS
-    case(2)
         rank = 1
         bmi_status = BMI_SUCCESS
     case default
@@ -392,9 +382,6 @@
         size = this%model%model_simulation%model_basin%nhru
         bmi_status = BMI_SUCCESS
     case(1)
-        size = 1
-        bmi_status = BMI_SUCCESS
-    case(2)
         size = this%model%model_simulation%groundwater%ngw
         bmi_status = BMI_SUCCESS
     case default
@@ -501,7 +488,7 @@
         'gwsink_coef', 'gwflow_coef', 'gwres_sink')
         type = "real"
         bmi_status = BMI_SUCCESS
-    case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', 'basin_gwflow', &
+    case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', &
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
         'gw_upslope', 'hru_storage', 'hru_storage_ante')
         type = "double"
@@ -525,7 +512,7 @@
     select case(name)
     case('pkwater_equiv', 'hru_intcpstor', 'soil_moist_tot', &
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
-        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', 'basin_gwflow', &
+        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
         'gwres_sink', 'gwres_stor', 'gwstor_minarea_wb', &
         'hru_gw_cascadeflow', 'hru_storage')
         units = "in"
@@ -551,79 +538,76 @@
     
       select case(name)
       case("pkwater_equiv")
-         size = sizeof(this%model%model_simulation%climate%pkwater_equiv)  ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%climate%pkwater_equiv(1))
          bmi_status = BMI_SUCCESS
       case("hru_intcpstor")
-         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor)             ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor(1))
          bmi_status = BMI_SUCCESS
       case("soil_moist_tot")
-         size = sizeof(this%model%model_simulation%soil%soil_moist_tot)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%soil_moist_tot(1))
          bmi_status = BMI_SUCCESS
       case("soil_to_gw")
-         size = sizeof(this%model%model_simulation%soil%soil_to_gw)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%soil_to_gw(1))
          bmi_status = BMI_SUCCESS
       case("ssr_to_gw")
-         size = sizeof(this%model%model_simulation%soil%ssr_to_gw)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%ssr_to_gw(1))
          bmi_status = BMI_SUCCESS
       case("ssres_flow")
-         size = sizeof(this%model%model_simulation%soil%ssres_flow)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%soil%ssres_flow(1))
          bmi_status = BMI_SUCCESS
       case("dprst_seep_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru(1))
          bmi_status = BMI_SUCCESS
       case("dprst_stor_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru(1))
          bmi_status = BMI_SUCCESS
       case("hru_impervstor")
-         size = sizeof(this%model%model_simulation%runoff%hru_impervstor)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%hru_impervstor(1))
          bmi_status = BMI_SUCCESS
       case("sroff")
-         size = sizeof(this%model%model_simulation%runoff%sroff)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%runoff%sroff(1))
          bmi_status = BMI_SUCCESS
       case("gwres_flow")
-         size = sizeof(this%model%model_simulation%groundwater%gwres_flow)                ! 'sizeof' in gcc & ifort
+         size = sizeof(this%model%model_simulation%groundwater%gwres_flow(1))
          bmi_status = BMI_SUCCESS
-      case('basin_gwflow')
-        size = sizeof(this%model%model_simulation%groundwater%basin_gwflow) 
-        bmi_status = BMI_SUCCESS
       case('gwsink_coef')
-        size = sizeof(this%model%model_simulation%groundwater%gwsink_coef) 
+        size = sizeof(this%model%model_simulation%groundwater%gwsink_coef(1)) 
         bmi_status = BMI_SUCCESS
       case('gwflow_coef')
-        size = sizeof(this%model%model_simulation%groundwater%gwflow_coef) 
+        size = sizeof(this%model%model_simulation%groundwater%gwflow_coef(1)) 
         bmi_status = BMI_SUCCESS
       case('gwin_dprst')
-        size = sizeof(this%model%model_simulation%groundwater%gwin_dprst) 
+        size = sizeof(this%model%model_simulation%groundwater%gwin_dprst(1)) 
         bmi_status = BMI_SUCCESS
       case('has_gwstor_minarea')
         size = sizeof(this%model%model_simulation%groundwater%has_gwstor_minarea) 
         bmi_status = BMI_SUCCESS
       case('gwres_in')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_in) 
+        size = sizeof(this%model%model_simulation%groundwater%gwres_in(1)) 
         bmi_status = BMI_SUCCESS
       case('gwres_sink')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_sink) 
+        size = sizeof(this%model%model_simulation%groundwater%gwres_sink(1)) 
         bmi_status = BMI_SUCCESS
       case('gwres_stor')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_stor) 
+        size = sizeof(this%model%model_simulation%groundwater%gwres_stor(1)) 
         bmi_status = BMI_SUCCESS
       case('gwres_stor_ante')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_stor_ante) 
+        size = sizeof(this%model%model_simulation%groundwater%gwres_stor_ante(1)) 
         bmi_status = BMI_SUCCESS
       case('gwstor_minarea_wb')
-        size = sizeof(this%model%model_simulation%groundwater%gwstor_minarea_wb) 
+        size = sizeof(this%model%model_simulation%groundwater%gwstor_minarea_wb(1)) 
         bmi_status = BMI_SUCCESS
       case('gw_upslope')
-        size = sizeof(this%model%model_simulation%groundwater%gw_upslope) 
+        size = sizeof(this%model%model_simulation%groundwater%gw_upslope(1)) 
         bmi_status = BMI_SUCCESS
       case('hru_gw_cascadeflow')
-        size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow) 
+        size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1)) 
         bmi_status = BMI_SUCCESS
       case('hru_storage')
-        size = sizeof(this%model%model_simulation%groundwater%hru_storage) 
+        size = sizeof(this%model%model_simulation%groundwater%hru_storage(1)) 
         bmi_status = BMI_SUCCESS
       case('hru_storage_ante')
-        size = sizeof(this%model%model_simulation%groundwater%hru_storage_ante) 
+        size = sizeof(this%model%model_simulation%groundwater%hru_storage_ante(1)) 
         bmi_status = BMI_SUCCESS
       case default
          size = -1
@@ -713,9 +697,6 @@
     integer :: bmi_status
     
     select case(name)
-    case('basin_gwflow')
-        dest = [this%model%model_simulation%groundwater%basin_gwflow]
-        bmi_status = BMI_FAILURE
     case('gwin_dprst')
         dest = [this%model%model_simulation%groundwater%gwin_dprst]
         bmi_status = BMI_FAILURE
@@ -812,10 +793,6 @@
 
     select case(name)
         !value below dimed by 1 not really necessary to get ptr?
-    !case('basin_gwflow')
-    !    src = c_loc(this%model%model_simulation%groundwater%basin_gwflow(1))
-    !    call c_f_pointer(src, dest_ptr, [n_elements])
-    !    bmi_status = BMI_SUCCESS
     case('gwin_dprst')
         src = c_loc(this%model%model_simulation%groundwater%gwin_dprst(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
