@@ -87,11 +87,11 @@
     public :: bmi_prms_groundwater
 
     character (len=BMI_MAX_COMPONENT_NAME), target :: &
-        component_name = "prms6-BMI"
+        component_name = "prms6-groundwater-BMI"
 
     ! Exchange items
     integer, parameter :: input_item_count = 15
-    integer, parameter :: output_item_count = 15
+    integer, parameter :: output_item_count = 14
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(input_item_count) :: input_items = (/ &
         
@@ -125,8 +125,8 @@
         !vars required for streamflow module from this(groundwater)
     'gwres_flow        ', & !r32 by nhru
         !output vars used in calibration
-    'gwsink_coef       ', & !r32 by nhru
-    'gflow_coef        ', & !r32 by nhru
+    'gwsink_coef       ', & !r32 by ngw
+    'gflow_coef        ', & !r32 by ngw
         !output vars used in water-balanc module
     'gwin_dprst        ', & !r64 by nhru
     'gwres_in          ', & !r64 by nhru
@@ -137,7 +137,6 @@
     'hru_gw_cascadeflow', & !r32 by nhru
     'hru_storage       ', & !r64 by nhru
     'hru_storage_ante  ', & !r64 by nhru
-    'gwres_flow        ', & !r32 by nhru
     'gwres_sink        ', & !r32 by nhru
     'has_gwstor_minarea' & !logical by 1
     /) 
@@ -308,7 +307,8 @@
     select case(name)
     case('pkwater_equiv', 'hru_intcpstor', 'soil_moist_tot', &
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
-        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow')
+        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
+        'gwres_sink', 'gwres_stor')
         grid = 0
         bmi_status = BMI_SUCCESS
     case('gwsink_coef', 'gwflow_coef')
@@ -598,7 +598,7 @@
     case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', &
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
         'gw_upslope', 'hru_storage', 'hru_storage_ante')
-        type = "double"
+        type = "double precision"
         bmi_status = BMI_SUCCESS
     case('has_gwstor_minarea')
         type = 'logical'
@@ -1121,6 +1121,19 @@
       case("gwres_flow")
          this%model%model_simulation%groundwater%gwres_flow = src
          bmi_status = BMI_SUCCESS
+      case("gwres_sink")
+         this%model%model_simulation%groundwater%gwres_sink= src
+         bmi_status = BMI_SUCCESS
+      case("gwres_stor")
+         this%model%model_simulation%groundwater%gwres_stor = src
+         bmi_status = BMI_SUCCESS
+      case('gwsink_coef')
+        this%model%model_simulation%groundwater%gwsink_coef = src
+        bmi_status = BMI_SUCCESS
+      case('gwflow_coef')
+        this%model%model_simulation%groundwater%gwflow_coef = src
+        bmi_status = BMI_SUCCESS
+
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1181,15 +1194,7 @@
       status = this%get_var_grid(name, gridid)
       status = this%get_grid_size(gridid, n_elements)
 
-      select case(name)
-      !case("plate_surface__temperature")
-      !   dest = c_loc(this%model%temperature(1,1))
-      !   call c_f_pointer(dest, dest_flattened, [this%model%n_y * this%model%n_x])
-      !   do i = 1, size(indices)
-      !      dest_flattened(indices(i)) = src(i)
-      !   end do
-      !   bmi_status = BMI_SUCCESS
-          
+      select case(name)          
           !Values below are input from surface and soil to groundwater
       case("hru_intcpstor")
         dest = c_loc(this%model%model_simulation%intcp%hru_intcpstor(1))
@@ -1247,6 +1252,35 @@
             dest_flattened(inds(i)) = src(i)
         end do
         bmi_status = BMI_SUCCESS
+      case("gwres_sink")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case("gwres_stor")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case('gwsink_coef')
+        dest = c_loc(this%model%model_simulation%groundwater%gwsink_coef(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+      case('gwflow_coef')
+        dest = c_loc(this%model%model_simulation%groundwater%gwflow_coef(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+        bmi_status = BMI_SUCCESS
+
       case default
          bmi_status = BMI_FAILURE
       end select
