@@ -31,7 +31,7 @@
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
-				<Tool Name="VFPreBuildEventTool" CommandLine="xcopy ..\..\projects\pipestem_surface .\pipestem_surface /i /s /Y&#xA;xcopy ..\..\projects\pipestem_soil .\pipestem_soil /i /s /Y&#xA;xcopy ..\..\projects\pipestem_groundwater .\pipestem_groundwater /i /s /Y&#xA;xcopy ..\..\projects\pipestem .\pipestem /i /s /Y"/>
+				<Tool Name="VFPreBuildEventTool" CommandLine="xcopy ..\..\..\bmi-test-projects\prms\pipestem .\pipestem_surface /i /e /s /y&#xA;xcopy ..\..\..\bmi-test-projects\prms\pipestem .\pipestem_soil /i /e /s /y&#xA;xcopy ..\..\..\bmi-test-projects\prms\pipestem .\pipestem_groundwater /i /e /s /y"/>
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Release|x64">

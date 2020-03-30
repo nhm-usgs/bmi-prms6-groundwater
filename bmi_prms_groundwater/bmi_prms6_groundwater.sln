@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.28307.902
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "irf_ex", "irf_ex\irf_ex.vfproj", "{8C887877-6983-4754-BD0C-A7A04B6F2A17}"
+	ProjectSection(ProjectDependencies) = postProject
+		{071C8398-EE85-4DE0-98A2-61361AD70CED} = {071C8398-EE85-4DE0-98A2-61361AD70CED}
+	EndProjectSection
 EndProject
 Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "bmi_prms_groundwater", "bmi_prms_groundwater\bmi_prms_groundwater.vfproj", "{071C8398-EE85-4DE0-98A2-61361AD70CED}"
 EndProject
