@@ -91,7 +91,7 @@
 
     ! Exchange items
     integer, parameter :: input_item_count = 15
-    integer, parameter :: output_item_count = 14
+    integer, parameter :: output_item_count = 15
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(input_item_count) :: input_items = (/ &
         
@@ -138,7 +138,9 @@
     'hru_storage       ', & !r64 by nhru
     'hru_storage_ante  ', & !r64 by nhru
     'gwres_sink        ', & !r32 by nhru
-    'has_gwstor_minarea' & !logical by 1
+    'has_gwstor_minarea', & !logical by 1
+        ! prms time
+    'nowtime           ' &
     /) 
 
     contains
@@ -317,6 +319,8 @@
         grid = 1
     case('has_gwstor_minearea')
         grid = 2
+    case('nowtime')
+        grid = 3
     case default
         grid = -1
         bmi_status = BMI_FAILURE
@@ -339,6 +343,8 @@
         type = "vector"
     case(2)
         type = 'scalar'
+    case(3)
+        type = 'vector'
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -361,6 +367,8 @@
         rank = 1
     case(2)
         rank = 0
+    case(3)
+        rank = 1
     case default
         rank = -1
         bmi_status = BMI_FAILURE
@@ -383,6 +391,8 @@
         shape(:) = [this%model%model_simulation%groundwater%ngw]
     case(2)
         shape(:) = [1]
+    case(3)
+        shape(:) = [6]
     case default
         shape(:) = -1
         bmi_status = BMI_FAILURE
@@ -405,6 +415,8 @@
         size = this%model%model_simulation%groundwater%ngw
     case(2)
         size = 1
+    case(3)
+        size = 6
     case default
         size = -1
         bmi_status = BMI_FAILURE
@@ -453,6 +465,8 @@
         x = this%model%model_simulation%model_basin%hru_x
     case(2)
         x = -1.d0
+    case(3)
+        x = dble([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     case default
         x(:) = -1.d0
         bmi_status = BMI_FAILURE
@@ -473,6 +487,8 @@
         y = this%model%model_simulation%model_basin%hru_y
     case(2)
         y = -1.d0
+    case(3)
+        y(:) = -1.d0
     case default
         y(:) = -1.d0
         bmi_status = BMI_FAILURE
@@ -493,6 +509,8 @@
         z = this%model%model_simulation%model_basin%hru_elev
     case(2)
         z = -1.d0
+    case(3)
+        z(:) = -1.d0
     case default
         z(:) = -1.d0
         bmi_status = BMI_FAILURE
@@ -507,7 +525,7 @@
       integer :: bmi_status
 
       select case(grid)
-      case(0:2)
+      case(0:3)
          bmi_status = this%get_grid_size(grid, count)
       case default
          count = -1
@@ -523,7 +541,7 @@
       integer :: bmi_status
 
       select case(grid)
-      case (0:2)
+      case (0:3)
          bmi_status = this%get_grid_node_count(grid, count)
          count = count - 1
       case default
@@ -540,7 +558,7 @@
       integer :: bmi_status
 
       select case(grid)
-      case (0:2)
+      case (0:3)
          count = 0
          bmi_status = BMI_SUCCESS
       case default
@@ -625,6 +643,8 @@
         type = "double precision"
     case('has_gwstor_minarea')
         type = 'logical'
+    case('nowtime')
+        type = "integer"
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -668,6 +688,8 @@
       bmi_status = BMI_SUCCESS
     
       select case(name)
+      case('nowtime')
+         size = sizeof(this%model%model_simulation%model_time%nowtime(1))
       case("pkwater_equiv")
          size = sizeof(this%model%model_simulation%climate%pkwater_equiv(1))
       case("hru_intcpstor")
