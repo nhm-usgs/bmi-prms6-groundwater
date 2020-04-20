@@ -802,6 +802,12 @@
       case('gwres_sink')
           dest = [this%model%model_simulation%groundwater%gwres_sink]
           bmi_status = BMI_SUCCESS
+      case('gwsink_coef')
+          dest = [this%model%model_simulation%groundwater%gwsink_coef]
+          bmi_status = BMI_SUCCESS
+      case('gwflow_coef')
+          dest = [this%model%model_simulation%groundwater%gwflow_coef]
+          bmi_status = BMI_SUCCESS
       case('hru_gw_cascadeflow')
         if(this%model%control_data%cascadegw_flag%value > 0) then 
             dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
@@ -1014,6 +1020,20 @@
         bmi_status = BMI_SUCCESS
     case('gwres_sink')
         src = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
+        call c_f_pointer(src, src_flattened, [n_elements])
+        do i = 1,  size(inds)
+            dest(i) = src_flattened(inds(i))
+        end do
+        bmi_status = BMI_SUCCESS
+    case('gwsink_coef')
+        src = c_loc(this%model%model_simulation%groundwater%gwsink_coef(1))
+        call c_f_pointer(src, src_flattened, [n_elements])
+        do i = 1,  size(inds)
+            dest(i) = src_flattened(inds(i))
+        end do
+        bmi_status = BMI_SUCCESS
+    case('gwflow_coef')
+        src = c_loc(this%model%model_simulation%groundwater%gwflow_coef(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
