@@ -303,7 +303,8 @@
     character (len=*), intent(in) :: name
     integer, intent(out) :: grid
     integer :: bmi_status
-
+        
+    bmi_status = BMI_SUCCESS
     select case(name)
     case('pkwater_equiv', 'hru_intcpstor', 'soil_moist_tot', &
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
@@ -312,11 +313,11 @@
         'gwres_stor_ante', 'gwstor_minarea_wb', 'gw_upslope', &
         'hru_gw_cascadeflow', 'hru_storage', 'hru_storage_ante')
         grid = 0
-        bmi_status = BMI_SUCCESS
     case('gwsink_coef', 'gwflow_coef')
         grid = 1
-        bmi_status = BMI_SUCCESS
-        case default
+    case('has_gwstor_minearea')
+        grid = 2
+    case default
         grid = -1
         bmi_status = BMI_FAILURE
     end select
@@ -592,21 +593,20 @@
     character (len=*), intent(in) :: name
     character (len=*), intent(out) :: type
     integer :: bmi_status
-
+       
+    bmi_status = BMI_SUCCESS
+    
     select case(name)
     case('hru_intcpstor', 'soil_moist_tot', 'soil_to_gw', &
         'ssr_to_gw', 'ssres_flow', 'hru_impervstor', 'sroff', 'gwres_flow', &
         'gwsink_coef', 'gwflow_coef', 'gwres_sink', 'hru_gw_cascadeflow')
         type = "real"
-        bmi_status = BMI_SUCCESS
     case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', &
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
         'gw_upslope', 'hru_storage', 'hru_storage_ante')
         type = "double precision"
-        bmi_status = BMI_SUCCESS
     case('has_gwstor_minarea')
         type = 'logical'
-        bmi_status = BMI_SUCCESS
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -1088,7 +1088,7 @@
         bmi_status = BMI_SUCCESS
     case('gw_upslope')
         if(this%model%control_data%cascadegw_flag%value > 0) then 
-        src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
+            src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
             call c_f_pointer(src, src_flattened, [n_elements])
             do i = 1,  size(inds)
                 dest(i) = src_flattened(inds(i))
@@ -1105,12 +1105,13 @@
         end do
         bmi_status = BMI_SUCCESS
     case('hru_storage_ante')
+        src = c_loc(this%model%model_simulation%groundwater%hru_storage_ante(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
         bmi_status = BMI_SUCCESS
-        case default
+    case default
         bmi_status = BMI_FAILURE
     end select
     end function prms_get_at_indices_double
