@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{8C887877-6983-4754-BD0C-A7A04B6F2A17}">
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="11.0" ProjectIdGuid="{336277A4-E76E-4D8F-88D1-60207A01FCCB}">
 	<Platforms>
 		<Platform Name="Win32"/>
 		<Platform Name="x64"/></Platforms>
@@ -25,8 +25,8 @@
 				<Tool Name="VFPostBuildEventTool"/>
 				<Tool Name="VFManifestTool" SuppressStartupBanner="true"/></Configuration>
 		<Configuration Name="Debug|x64">
-				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="B:\gitbmi\bmi-prms6-surface\bmi_prms_surface\bmi_prms_surface\x64\Debug;B:\gitbmi\bmi-prms6-soil\bmi_prms_soil\bmi_prms_soil\x64\Debug;B:\gitbmi\bmi-prms6-groundwater\bmi_prms_groundwater\bmi_prms_groundwater\x64\Debug" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
-				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="B:\gitbmi\bmi-prms6-groundwater\bmi_prms_groundwater\bmi_prms_groundwater\x64\Debug;B:\gitbmi\bmi-prms6-soil\bmi_prms_soil\bmi_prms_soil\x64\Debug;B:\gitbmi\bmi-prms6-surface\bmi_prms_surface\bmi_prms_surface\x64\Debug;B:\BuildNetcdf\install\lib;B:\BuildNetcdf\install\1.10.5\lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies="bmi_prms_groundwater.lib bmi_prms_soil.lib bmi_prms_surface.lib B:\gitbmi\prms\_build\prmslib\Debug\prmslib.lib B:\BuildNetcdf\install\lib\coretran.lib B:\gitbmi\bmi-prms6\_build\src\Debug\bmiprms.lib B:\BuildNetcdf\install\lib\netcdf.lib B:\BuildNetcdf\install\lib\netcdff.lib libhdf5.lib libhdf5_hl.lib libszip.lib libzlib.lib"/>
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\bmi_prms_groundwater\x64\Debug" WarnInterfaces="true" Traceback="true" BoundsCheck="true" StackFrameCheck="true" RuntimeLibrary="rtMultiThreadedDebugDLL"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\bmi_prms_groundwater\x64\Debug;B:\BuildNetcdf\install\lib;B:\BuildNetcdf\install\1.10.5\lib" GenerateDebugInformation="true" SubSystem="subSystemConsole" AdditionalDependencies=" bmi_prms_groundwater.lib B:\gitbmi\prms\_build\prmslib\Debug\prmslib.lib B:\BuildNetcdf\install\lib\coretran.lib  B:\BuildNetcdf\install\lib\netcdf.lib B:\BuildNetcdf\install\lib\netcdff.lib libhdf5.lib libhdf5_hl.lib libszip.lib libzlib.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -48,6 +48,6 @@
 		<Filter Name="Header Files" Filter="fi;fd;h;inc"/>
 		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
 		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
-		<File RelativePath="..\..\examples\irf_ex.f90"/>
-		<File RelativePath="..\..\examples\testing_helpers.f90"/></Filter></Files>
+		<File RelativePath="..\..\tests\fixtures.f90"/>
+		<File RelativePath="..\..\tests\test_get_value_ptr.f90"/></Filter></Files>
 	<Globals/></VisualStudioProject>

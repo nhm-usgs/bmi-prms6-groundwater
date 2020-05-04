@@ -26,13 +26,20 @@
     procedure :: get_var_grid => prms_var_grid
     procedure :: get_grid_type => prms_grid_type
     procedure :: get_grid_rank => prms_grid_rank
-    !procedure :: get_grid_shape => prms_grid_shape
+    procedure :: get_grid_shape => prms_grid_shape
     procedure :: get_grid_size => prms_grid_size
-    !procedure :: get_grid_spacing => prms_grid_spacing
-    !procedure :: get_grid_origin => prms_grid_origin
+    procedure :: get_grid_spacing => prms_grid_spacing
+    procedure :: get_grid_origin => prms_grid_origin
     procedure :: get_grid_x => prms_grid_x
     procedure :: get_grid_y => prms_grid_y
     procedure :: get_grid_z => prms_grid_z
+    procedure :: get_grid_node_count => prms_grid_node_count
+    procedure :: get_grid_edge_count => prms_grid_edge_count
+    procedure :: get_grid_face_count => prms_grid_face_count
+    procedure :: get_grid_edge_nodes => prms_grid_edge_nodes
+    procedure :: get_grid_face_edges => prms_grid_face_edges
+    procedure :: get_grid_face_nodes => prms_grid_face_nodes
+    procedure :: get_grid_nodes_per_face => prms_grid_nodes_per_face
     procedure :: get_var_type => prms_var_type
     procedure :: get_var_units => prms_var_units
     procedure :: get_var_itemsize => prms_var_itemsize
@@ -80,60 +87,60 @@
     public :: bmi_prms_groundwater
 
     character (len=BMI_MAX_COMPONENT_NAME), target :: &
-        component_name = "prms6-BMI"
+        component_name = "prms6-groundwater-BMI"
 
     ! Exchange items
     integer, parameter :: input_item_count = 15
-    integer, parameter :: output_item_count = 16
+    integer, parameter :: output_item_count = 15
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(input_item_count) :: input_items = (/ &
         
     !vars below required input to groundwater module from surface and soil modules
     !vars from climate
-    'pkwater_equiv', & !r64 by nhru
+    'pkwater_equiv     ', & !r64 by nhru
     
     !vars from intcp
-    'hru_intcpstor', & !r32 by nhru
+    'hru_intcpstor     ', & !r32 by nhru
     
     !vars from soil
-    'soil_moist_tot', & !r32 by nhru
-    'soil_to_gw', & !r32 by nhru
-    'ssr_to_gw', & !r32 by nhru
-    'ssres_flow', & !r32 by nhru
+    'soil_moist_tot    ', & !r32 by nhru
+    'soil_to_gw        ', & !r32 by nhru
+    'ssr_to_gw         ', & !r32 by nhru
+    'ssres_flow        ', & !r32 by nhru
     
     !vars from runoff
-    'dprst_seep_hru', & !r64  by nhru
-    'dprst_stor_hru', & !r64 by nhru
-    'hru_impervstor', & !r32 by nhru
-    'sroff', & !r32 by nhru
+    'dprst_seep_hru    ', & !r64  by nhru
+    'dprst_stor_hru    ', & !r64 by nhru
+    'hru_impervstor    ', & !r32 by nhru
+    'sroff             ', & !r32 by nhru
         !input vars that could be used in calibration
-    'gwsink_coef', & !r32 by ngw
-    'gwflow_coef', & !r32 by ngw
-    'gwres_flow', & !r32 by nhru
-    'gwres_sink', & !r32 by nhru
-    'gwres_stor' & !r64 by nhru
+    'gwsink_coef       ', & !r32 by ngw
+    'gwflow_coef       ', & !r32 by ngw
+    'gwres_flow        ', & !r32 by nhru
+    'gwres_sink        ', & !r32 by nhru
+    'gwres_stor        ' & !r64 by nhru
     /) 
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(output_item_count) :: output_items = (/ &
         !vars required for streamflow module from this(groundwater)
-    'gwres_flow', & !r32 by nhru
-    'basin_gwflow', & !r64 by 1
+    'gwres_flow        ', & !r32 by nhru
         !output vars used in calibration
-    'gwsink_coef', & !r32 by nhru
-    'gflow_coef', & !r32 by nhru
+    'gwsink_coef       ', & !r32 by ngw
+    'gflow_coef        ', & !r32 by ngw
         !output vars used in water-balanc module
-    'gwin_dprst', & !r64 by nhru
-    'gwres_in', & !r64 by nhru
-    'gwres_stor', & !r64 by nhru
-    'gwres_stor_ante', & !r64 by nhru
-    'gwstor_minarea_wb', & !r64 by nhru
-    'gw_upslope', & !r64 by nhru
+    'gwin_dprst        ', & !r64 by nhru
+    'gwres_in          ', & !r64 by nhru
+    'gwres_stor        ', & !r64 by nhru
+    'gwres_stor_ante   ', & !r64 by nhru
+    'gwstor_minarea_wb ', & !r64 by nhru
+    'gw_upslope        ', & !r64 by nhru
     'hru_gw_cascadeflow', & !r32 by nhru
-    'hru_storage', & !r64 by nhru
-    'hru_storage_ante', & !r64 by nhru
-    'gwres_flow', & !r32 by nhru
-    'gwres_sink', & !r32 by nhru
-    'has_gwstor_minarea' & !logical by 1
+    'hru_storage       ', & !r64 by nhru
+    'hru_storage_ante  ', & !r64 by nhru
+    'gwres_sink        ', & !r32 by nhru
+    'has_gwstor_minarea', & !logical by 1
+        ! prms time
+    'nowtime           ' &
     /) 
 
     contains
@@ -282,7 +289,7 @@
     s = this%get_end_time(end_time)
     s = this%get_time_step(dt)
     if (time > current_time) then
-        n_steps_real = (time - current_time) / dt
+        n_steps_real = (time - current_time)
         n_steps = floor(n_steps_real)
         do i = 1, n_steps
             s = this%update()
@@ -298,20 +305,23 @@
     character (len=*), intent(in) :: name
     integer, intent(out) :: grid
     integer :: bmi_status
-
+        
+    bmi_status = BMI_SUCCESS
     select case(name)
     case('pkwater_equiv', 'hru_intcpstor', 'soil_moist_tot', &
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
-        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow')
+        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
+        'gwres_sink', 'gwres_stor', 'gwin_dprst', 'gwres_in', &
+        'gwres_stor_ante', 'gwstor_minarea_wb', 'gw_upslope', &
+        'hru_gw_cascadeflow', 'hru_storage', 'hru_storage_ante')
         grid = 0
-        bmi_status = BMI_SUCCESS
-    case('basin_gwflow')
-        grid = 1
-        bmi_status = BMI_SUCCESS
     case('gwsink_coef', 'gwflow_coef')
+        grid = 1
+    case('has_gwstor_minarea')
         grid = 2
-        bmi_status = BMI_SUCCESS
-        case default
+    case('nowtime')
+        grid = 3
+    case default
         grid = -1
         bmi_status = BMI_FAILURE
     end select
@@ -323,17 +333,18 @@
     integer, intent(in) :: grid
     character (len=*), intent(out) :: type
     integer :: bmi_status
+        
+    bmi_status = BMI_SUCCESS
 
     select case(grid)
     case(0)
         type = "vector"
-        bmi_status = BMI_SUCCESS
     case(1)
-        type = "scalar"
-        bmi_status = BMI_SUCCESS
-     case(2)
         type = "vector"
-        bmi_status = BMI_SUCCESS
+    case(2)
+        type = 'scalar'
+    case(3)
+        type = 'vector'
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -346,40 +357,48 @@
     integer, intent(in) :: grid
     integer, intent(out) :: rank
     integer :: bmi_status
+       
+    bmi_status = BMI_SUCCESS
 
     select case(grid)
     case(0)
         rank = 1
-        bmi_status = BMI_SUCCESS
     case(1)
-        rank = 0
-        bmi_status = BMI_SUCCESS
-    case(2)
         rank = 1
-        bmi_status = BMI_SUCCESS
+    case(2)
+        rank = 0
+    case(3)
+        rank = 1
     case default
         rank = -1
         bmi_status = BMI_FAILURE
     end select
     end function prms_grid_rank
 
-    !! The dimensions of a grid.
-    !function prms_grid_shape(this, type, grid_shape) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  integer, intent(in) :: type
-    !  integer, dimension(:), intent(out) :: grid_shape
-    !  integer :: bmi_status
-    !
-    !  select case(type)
-    !  case(0)
-    !     grid_shape = this%model%control_data%nhru%value
-    !     bmi_status = BMI_SUCCESS
-    !  case default
-    !     grid_shape = [-1]
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_grid_shape
-    !
+    ! The dimensions of a grid.
+    function prms_grid_shape(this, grid, shape) result (bmi_status)
+    class (bmi_prms_groundwater), intent(in) :: this
+    integer, intent(in) :: grid
+    integer, dimension(:), intent(out) :: shape
+    integer :: bmi_status
+    
+    bmi_status = BMI_SUCCESS
+
+    select case(grid)
+    case(0)
+        shape(:) = [this%model%model_simulation%model_basin%nhru]
+    case(1)
+        shape(:) = [this%model%model_simulation%groundwater%ngw]
+    case(2)
+        shape(:) = [1]
+    case(3)
+        shape(:) = [6]
+    case default
+        shape(:) = -1
+        bmi_status = BMI_FAILURE
+    end select
+    end function prms_grid_shape
+    
     ! The total number of elements in a grid.
     function prms_grid_size(this, grid, size) result (bmi_status)
     class (bmi_prms_groundwater), intent(in) :: this
@@ -387,69 +406,69 @@
     integer, intent(out) :: size
     integer :: bmi_status
 
+    bmi_status = BMI_SUCCESS
+
     select case(grid)
     case(0)
         size = this%model%model_simulation%model_basin%nhru
-        bmi_status = BMI_SUCCESS
     case(1)
-        size = 1
-        bmi_status = BMI_SUCCESS
-    case(2)
         size = this%model%model_simulation%groundwater%ngw
-        bmi_status = BMI_SUCCESS
+    case(2)
+        size = 1
+    case(3)
+        size = 6
     case default
         size = -1
         bmi_status = BMI_FAILURE
     end select
     end function prms_grid_size
 
-    !! The distance between nodes of a grid.
-    !function prms_grid_spacing(this, type, grid_spacing) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  integer, intent(in) :: type
-    !  real, dimension(:), intent(out) :: grid_spacing
-    !  integer :: bmi_status
-    !
-    !  select case(type)
-    !  case(0)
-    !     grid_spacing = [this%model%dy, this%model%dx]
-    !     bmi_status = BMI_SUCCESS
-    !  case default
-    !     grid_spacing = -1
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_grid_spacing
-    !
-    !! Coordinates of grid origin.
-    !function prms_grid_origin(this, type, grid_origin) result (bmi_status)
-    !  class (bmi_prms_groundwater), intent(in) :: this
-    !  integer, intent(in) :: type
-    !  real, dimension(:), intent(out) :: grid_origin
-    !  integer :: bmi_status
-    !
-    !  select case(type)
-    !  case(0)
-    !     grid_origin = [0.0, 0.0]
-    !     bmi_status = BMI_SUCCESS
-    !  case default
-    !     grid_origin = [-1.0]
-    !     bmi_status = BMI_FAILURE
-    !  end select
-    !end function prms_grid_origin
-    !
+    ! The distance between nodes of a grid.
+    function prms_grid_spacing(this, grid, spacing) result (bmi_status)
+     class (bmi_prms_groundwater), intent(in) :: this
+     integer, intent(in) :: grid
+     double precision, dimension(:), intent(out) :: spacing
+     integer :: bmi_status
+    
+     select case(grid)
+     case default
+        spacing(:) = -1.d0
+        bmi_status = BMI_FAILURE
+     end select
+    end function prms_grid_spacing
+    
+    ! Coordinates of grid origin.
+    function prms_grid_origin(this, grid, origin) result (bmi_status)
+     class (bmi_prms_groundwater), intent(in) :: this
+     integer, intent(in) :: grid
+     double precision, dimension(:), intent(out) :: origin
+     integer :: bmi_status
+    
+     select case(grid)
+     case default
+        origin(:) = -1.d0
+        bmi_status = BMI_FAILURE
+     end select
+    end function prms_grid_origin
+    
     ! X-coordinates of grid nodes.
     function prms_grid_x(this, grid, x) result (bmi_status)
     class (bmi_prms_groundwater), intent(in) :: this
     integer, intent(in) :: grid
     double precision, dimension(:), intent(out) :: x
     integer :: bmi_status
+        
+    bmi_status = BMI_SUCCESS
 
     select case(grid)
-    case(0)
+    case(0:1)
         x = this%model%model_simulation%model_basin%hru_x
-        bmi_status = BMI_SUCCESS
-        case default
-        x = [-1.0]
+    case(2)
+        x = -1.d0
+    case(3)
+        x = dble([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+    case default
+        x(:) = -1.d0
         bmi_status = BMI_FAILURE
     end select
     end function prms_grid_x
@@ -460,13 +479,18 @@
     integer, intent(in) :: grid
     double precision, dimension(:), intent(out) :: y
     integer :: bmi_status
-
+        
+    bmi_status = BMI_SUCCESS
+    
     select case(grid)
-    case(0)
+    case(0:1)
         y = this%model%model_simulation%model_basin%hru_y
-        bmi_status = BMI_SUCCESS
-        case default
-        y = [-1.0]
+    case(2)
+        y = -1.d0
+    case(3)
+        y(:) = -1.d0
+    case default
+        y(:) = -1.d0
         bmi_status = BMI_FAILURE
     end select
     end function prms_grid_y
@@ -478,37 +502,152 @@
     double precision, dimension(:), intent(out) :: z
     integer :: bmi_status
 
+    bmi_status = BMI_SUCCESS
+
     select case(grid)
-    case(0)
+    case(0:1)
         z = this%model%model_simulation%model_basin%hru_elev
-        bmi_status = BMI_SUCCESS
-        case default
-        z = [-1.0]
+    case(2)
+        z = -1.d0
+    case(3)
+        z(:) = -1.d0
+    case default
+        z(:) = -1.d0
         bmi_status = BMI_FAILURE
     end select
     end function prms_grid_z
-    !
+    
+    ! Get the number of nodes in an unstructured grid.
+    function prms_grid_node_count(this, grid, count) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, intent(out) :: count
+      integer :: bmi_status
+
+      bmi_status = BMI_SUCCESS
+      
+      select case(grid)
+      case(0:3)
+         bmi_status = this%get_grid_size(grid, count)
+      case default
+         count = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_node_count
+
+    ! Get the number of edges in an unstructured grid.
+    function prms_grid_edge_count(this, grid, count) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, intent(out) :: count
+      integer :: bmi_status
+
+      bmi_status = BMI_SUCCESS
+      
+      select case(grid)
+      case (0:3)
+         bmi_status = this%get_grid_node_count(grid, count)
+         count = count - 1
+      case default
+         count = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_edge_count
+
+    ! Get the number of faces in an unstructured grid.
+    function prms_grid_face_count(this, grid, count) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, intent(out) :: count
+      integer :: bmi_status
+    
+      bmi_status = BMI_SUCCESS
+      
+      select case(grid)
+      case (0:3)
+         count = 0
+      case default
+         count = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_face_count
+
+    ! Get the edge-node connectivity.
+    function prms_grid_edge_nodes(this, grid, edge_nodes) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, dimension(:), intent(out) :: edge_nodes
+      integer :: bmi_status
+      
+      select case(grid)
+      case default
+         edge_nodes(:) = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_edge_nodes
+
+    ! Get the face-edge connectivity.
+    function prms_grid_face_edges(this, grid, face_edges) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, dimension(:), intent(out) :: face_edges
+      integer :: bmi_status
+
+      select case(grid)
+      case default
+         face_edges(:) = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_face_edges
+
+    ! Get the face-node connectivity.
+    function prms_grid_face_nodes(this, grid, face_nodes) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, dimension(:), intent(out) :: face_nodes
+      integer :: bmi_status
+
+      select case(grid)
+      case default
+         face_nodes(:) = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_face_nodes
+
+    ! Get the number of nodes for each face.
+    function prms_grid_nodes_per_face(this, grid, nodes_per_face) result(bmi_status)
+      class(bmi_prms_groundwater), intent(in) :: this
+      integer, intent(in) :: grid
+      integer, dimension(:), intent(out) :: nodes_per_face
+      integer :: bmi_status
+
+      select case(grid)
+      case default
+         nodes_per_face(:) = -1
+         bmi_status = BMI_FAILURE
+      end select
+    end function prms_grid_nodes_per_face
+
     ! The data type of the variable, as a string.
     function prms_var_type(this, name, type) result (bmi_status)
     class (bmi_prms_groundwater), intent(in) :: this
     character (len=*), intent(in) :: name
     character (len=*), intent(out) :: type
     integer :: bmi_status
-
+       
+    bmi_status = BMI_SUCCESS
+    
     select case(name)
     case('hru_intcpstor', 'soil_moist_tot', 'soil_to_gw', &
         'ssr_to_gw', 'ssres_flow', 'hru_impervstor', 'sroff', 'gwres_flow', &
-        'gwsink_coef', 'gwflow_coef', 'gwres_sink')
+        'gwsink_coef', 'gwflow_coef', 'gwres_sink', 'hru_gw_cascadeflow')
         type = "real"
-        bmi_status = BMI_SUCCESS
-    case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', 'basin_gwflow', &
+    case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', &
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
         'gw_upslope', 'hru_storage', 'hru_storage_ante')
-        type = "double"
-        bmi_status = BMI_SUCCESS
-    case('has_gwstor_minarea')
-        type = 'logical'
-        bmi_status = BMI_SUCCESS
+        type = "double precision"
+    case('nowtime','has_gwstor_minarea')
+        type = "integer"
     case default
         type = "-"
         bmi_status = BMI_FAILURE
@@ -521,24 +660,23 @@
     character (len=*), intent(in) :: name
     character (len=*), intent(out) :: units
     integer :: bmi_status
+        
+    bmi_status = BMI_SUCCESS
 
     select case(name)
     case('pkwater_equiv', 'hru_intcpstor', 'soil_moist_tot', &
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
-        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', 'basin_gwflow', &
+        'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
         'gwres_sink', 'gwres_stor', 'gwstor_minarea_wb', &
-        'hru_gw_cascadeflow', 'hru_storage')
+        'hru_gw_cascadeflow', 'hru_storage', 'gwin_dprst', &
+        'gwres_stor_ante', 'hru_storage_ante')
         units = "in"
-        bmi_status = BMI_SUCCESS
     case('gwres_in', 'gw_upslope')
         units = 'acre-inches'
-        bmi_status = BMI_SUCCESS
     case('gwsink_coef', 'gwflow_coef')
         units = 'fraction/day'
-        bmi_status = BMI_SUCCESS
     case default
         units = "-"
-        bmi_status = BMI_FAILURE
     end select
     end function prms_var_units
 
@@ -548,83 +686,70 @@
       character (len=*), intent(in) :: name
       integer, intent(out) :: size
       integer :: bmi_status
+        
+      bmi_status = BMI_SUCCESS
     
       select case(name)
+      case('nowtime')
+         size = sizeof(this%model%model_simulation%model_time%nowtime(1))
       case("pkwater_equiv")
-         size = sizeof(this%model%model_simulation%climate%pkwater_equiv)  ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%climate%pkwater_equiv(1))
       case("hru_intcpstor")
-         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor)             ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%intcp%hru_intcpstor(1))
       case("soil_moist_tot")
-         size = sizeof(this%model%model_simulation%soil%soil_moist_tot)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%soil%soil_moist_tot(1))
       case("soil_to_gw")
-         size = sizeof(this%model%model_simulation%soil%soil_to_gw)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%soil%soil_to_gw(1))
       case("ssr_to_gw")
-         size = sizeof(this%model%model_simulation%soil%ssr_to_gw)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%soil%ssr_to_gw(1))
       case("ssres_flow")
-         size = sizeof(this%model%model_simulation%soil%ssres_flow)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%soil%ssres_flow(1))
       case("dprst_seep_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%runoff%dprst_seep_hru(1))
       case("dprst_stor_hru")
-         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%runoff%dprst_stor_hru(1))
       case("hru_impervstor")
-         size = sizeof(this%model%model_simulation%runoff%hru_impervstor)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%runoff%hru_impervstor(1))
       case("sroff")
-         size = sizeof(this%model%model_simulation%runoff%sroff)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%runoff%sroff(1))
       case("gwres_flow")
-         size = sizeof(this%model%model_simulation%groundwater%gwres_flow)                ! 'sizeof' in gcc & ifort
-         bmi_status = BMI_SUCCESS
-      case('basin_gwflow')
-        size = sizeof(this%model%model_simulation%groundwater%basin_gwflow) 
-        bmi_status = BMI_SUCCESS
+         size = sizeof(this%model%model_simulation%groundwater%gwres_flow(1))
       case('gwsink_coef')
-        size = sizeof(this%model%model_simulation%groundwater%gwsink_coef) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwsink_coef(1)) 
       case('gwflow_coef')
-        size = sizeof(this%model%model_simulation%groundwater%gwflow_coef) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwflow_coef(1)) 
       case('gwin_dprst')
-        size = sizeof(this%model%model_simulation%groundwater%gwin_dprst) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwin_dprst(1)) 
       case('has_gwstor_minarea')
         size = sizeof(this%model%model_simulation%groundwater%has_gwstor_minarea) 
-        bmi_status = BMI_SUCCESS
       case('gwres_in')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_in) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwres_in(1)) 
       case('gwres_sink')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_sink) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwres_sink(1)) 
       case('gwres_stor')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_stor) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwres_stor(1)) 
       case('gwres_stor_ante')
-        size = sizeof(this%model%model_simulation%groundwater%gwres_stor_ante) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwres_stor_ante(1)) 
       case('gwstor_minarea_wb')
-        size = sizeof(this%model%model_simulation%groundwater%gwstor_minarea_wb) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%gwstor_minarea_wb(1)) 
       case('gw_upslope')
-        size = sizeof(this%model%model_simulation%groundwater%gw_upslope) 
-        bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            size = sizeof(this%model%model_simulation%groundwater%gw_upslope(1)) 
+        else
+            size = -1
+            bmi_status = BMI_FAILURE
+        endif
       case('hru_gw_cascadeflow')
-        size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow) 
-        bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1)) 
+        else
+            size = -1
+            bmi_status = BMI_FAILURE
+        endif
       case('hru_storage')
-        size = sizeof(this%model%model_simulation%groundwater%hru_storage) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%hru_storage(1)) 
       case('hru_storage_ante')
-        size = sizeof(this%model%model_simulation%groundwater%hru_storage_ante) 
-        bmi_status = BMI_SUCCESS
+        size = sizeof(this%model%model_simulation%groundwater%hru_storage_ante(1)) 
       case default
          size = -1
          bmi_status = BMI_FAILURE
@@ -661,7 +786,7 @@
 
         select case(name)
         case default
-           location = "face"
+           location = "node"
            bmi_status = BMI_SUCCESS
         end select
     end function prms_var_location
@@ -671,14 +796,21 @@
       character (len=*), intent(in) :: name
       integer, intent(inout) :: dest(:)
       integer :: bmi_status
-    
+        
+      bmi_status = BMI_SUCCESS
+      
       select case(name)
       case('has_gwstor_minarea')
-         dest = [this%model%model_simulation%groundwater%has_gwstor_minarea]
-         bmi_status = BMI_SUCCESS
+          if(this%model%model_simulation%groundwater%has_gwstor_minarea.eqv..false.) then
+              dest = [0]
+          else
+              dest = [1]
+          endif
+      case('nowtime')
+        dest = [this%model%model_simulation%model_time%nowtime]
       case default
-         dest = [-1]
-         bmi_status = BMI_FAILURE
+        dest = [-1]
+        bmi_status = BMI_FAILURE
       end select
     end function prms_get_int
     
@@ -688,17 +820,25 @@
       character (len=*), intent(in) :: name
       real, intent(inout) :: dest(:)
       integer :: bmi_status
-    
+          
+      bmi_status = BMI_SUCCESS
+      
       select case(name)
       case('gwres_flow')
           dest = [this%model%model_simulation%groundwater%gwres_flow]
-          bmi_status = BMI_SUCCESS
       case('gwres_sink')
           dest = [this%model%model_simulation%groundwater%gwres_sink]
-          bmi_status = BMI_SUCCESS
+      case('gwsink_coef')
+          dest = [this%model%model_simulation%groundwater%gwsink_coef]
+      case('gwflow_coef')
+          dest = [this%model%model_simulation%groundwater%gwflow_coef]
       case('hru_gw_cascadeflow')
-          dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
-          bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
+        else
+            dest = [-1.0]
+            bmi_status = BMI_FAILURE
+        endif
       case default
          dest = [-1.0]
          bmi_status = BMI_FAILURE
@@ -711,35 +851,31 @@
     character (len=*), intent(in) :: name
     double precision, intent(inout) :: dest(:)
     integer :: bmi_status
+        
+    bmi_status = BMI_SUCCESS
     
     select case(name)
-    case('basin_gwflow')
-        dest = [this%model%model_simulation%groundwater%basin_gwflow]
-        bmi_status = BMI_FAILURE
     case('gwin_dprst')
         dest = [this%model%model_simulation%groundwater%gwin_dprst]
-        bmi_status = BMI_FAILURE
     case('gwres_in')
         dest = [this%model%model_simulation%groundwater%gwres_in]
-        bmi_status = BMI_FAILURE
     case('gwres_stor')
         dest = [this%model%model_simulation%groundwater%gwres_stor]
-        bmi_status = BMI_FAILURE
     case('gwres_stor_ante')
         dest = [this%model%model_simulation%groundwater%gwres_stor_ante]
-        bmi_status = BMI_FAILURE
     case('gwstor_minarea_wb')
         dest = [this%model%model_simulation%groundwater%gwstor_minarea_wb]
-        bmi_status = BMI_FAILURE
     case('gw_upslope')
-        dest = [this%model%model_simulation%groundwater%gw_upslope]
-        bmi_status = BMI_FAILURE
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            dest = [this%model%model_simulation%groundwater%gw_upslope]
+        else
+            dest = [-1.d0]
+            bmi_status = BMI_SUCCESS
+        endif
     case('hru_storage')
         dest = [this%model%model_simulation%groundwater%hru_storage]
-        bmi_status = BMI_FAILURE
     case('hru_storage_ante')
         dest = [this%model%model_simulation%groundwater%hru_storage_ante]
-        bmi_status = BMI_FAILURE
     case default
         dest = [-1.d0]
         bmi_status = BMI_FAILURE
@@ -758,10 +894,6 @@
     status = this%get_grid_size(gridid, n_elements)
 
     select case(name)
-    !case('nowtime')
-    !    src = c_loc(this%model%model_simulation%model_time%nowtime(1))
-    !    call c_f_pointer(src, dest_ptr, [n_elements])
-    !    bmi_status = BMI_SUCCESS
     case default
        bmi_status = BMI_FAILURE
     end select
@@ -780,19 +912,22 @@
     status = this%get_var_grid(name,gridid)
     status = this%get_grid_size(gridid, n_elements)
 
+    bmi_status = BMI_SUCCESS
+
     select case(name)
     case('gwres_flow')
         src = c_loc(this%model%model_simulation%groundwater%gwres_flow(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gwres_sink')
         src = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('hru_gw_cascadeflow')
-        src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
-        call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
+            call c_f_pointer(src, dest_ptr, [n_elements])
+        else
+            bmi_status = BMI_FAILURE
+        endif
     case default
         bmi_status = BMI_FAILURE
     end select
@@ -809,45 +944,38 @@
     
     status = this%get_var_grid(name,gridid)
     status = this%get_grid_size(gridid, n_elements)
+        
+    bmi_status = BMI_SUCCESS
 
     select case(name)
-        !value below dimed by 1 not really necessary to get ptr?
-    !case('basin_gwflow')
-    !    src = c_loc(this%model%model_simulation%groundwater%basin_gwflow(1))
-    !    call c_f_pointer(src, dest_ptr, [n_elements])
-    !    bmi_status = BMI_SUCCESS
     case('gwin_dprst')
         src = c_loc(this%model%model_simulation%groundwater%gwin_dprst(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gwres_in')
         src = c_loc(this%model%model_simulation%groundwater%gwres_in(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gwres_stor')
         src = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gwres_stor_ante')
         src = c_loc(this%model%model_simulation%groundwater%gwres_stor_ante(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gwstor_minarea_wb')
         src = c_loc(this%model%model_simulation%groundwater%gwstor_minarea_wb(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('gw_upslope')
-        src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
-        call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
+            call c_f_pointer(src, dest_ptr, [n_elements])
+        else
+            bmi_status = BMI_FAILURE
+        endif
     case('hru_storage')
         src = c_loc(this%model%model_simulation%groundwater%hru_storage(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case('hru_storage_ante')
         src = c_loc(this%model%model_simulation%groundwater%hru_storage_ante(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-        bmi_status = BMI_SUCCESS
     case default
         bmi_status = BMI_FAILURE
     end select
@@ -885,6 +1013,8 @@
         
     status = this%get_var_grid(name,gridid)
     status = this%get_grid_size(gridid, n_elements)
+        
+    bmi_status = BMI_SUCCESS
 
     select case(name)
     case('gwres_flow')
@@ -893,21 +1023,34 @@
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gwres_sink')
         src = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
-    case('hru_gw_cascadeflow')
-        src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
+    case('gwsink_coef')
+        src = c_loc(this%model%model_simulation%groundwater%gwsink_coef(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
+    case('gwflow_coef')
+        src = c_loc(this%model%model_simulation%groundwater%gwflow_coef(1))
+        call c_f_pointer(src, src_flattened, [n_elements])
+        do i = 1,  size(inds)
+            dest(i) = src_flattened(inds(i))
+        end do
+    case('hru_gw_cascadeflow')
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
+            call c_f_pointer(src, src_flattened, [n_elements])
+            do i = 1,  size(inds)
+                dest(i) = src_flattened(inds(i))
+            end do
+        else
+            bmi_status = BMI_FAILURE
+        endif
     case default
         bmi_status = BMI_FAILURE
     end select
@@ -927,6 +1070,8 @@
         
     status = this%get_var_grid(name,gridid)
     status = this%get_grid_size(gridid, n_elements)
+        
+    bmi_status = BMI_SUCCESS
 
     select case(name)
     case('gwin_dprst')
@@ -935,56 +1080,53 @@
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gwres_in')
         src = c_loc(this%model%model_simulation%groundwater%gwres_in(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gwres_stor')
         src = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gwres_stor_ante')
         src = c_loc(this%model%model_simulation%groundwater%gwres_stor_ante(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gwstor_minarea_wb')
         src = c_loc(this%model%model_simulation%groundwater%gwstor_minarea_wb(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('gw_upslope')
-        src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
-        call c_f_pointer(src, src_flattened, [n_elements])
-        do i = 1,  size(inds)
-            dest(i) = src_flattened(inds(i))
-        end do
-        bmi_status = BMI_SUCCESS
+        if(this%model%control_data%cascadegw_flag%value > 0) then 
+            src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
+            call c_f_pointer(src, src_flattened, [n_elements])
+            do i = 1,  size(inds)
+                dest(i) = src_flattened(inds(i))
+            end do
+        else
+            bmi_status = BMI_FAILURE
+        endif
     case('hru_storage')
         src = c_loc(this%model%model_simulation%groundwater%hru_storage(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
     case('hru_storage_ante')
+        src = c_loc(this%model%model_simulation%groundwater%hru_storage_ante(1))
         call c_f_pointer(src, src_flattened, [n_elements])
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-        bmi_status = BMI_SUCCESS
-        case default
+    case default
         bmi_status = BMI_FAILURE
     end select
     end function prms_get_at_indices_double
@@ -997,9 +1139,6 @@
       integer :: bmi_status
     
       select case(name)
-      !case("model__identification_number")
-      !   this%model%id = src(1)
-      !   bmi_status = BMI_SUCCESS
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1011,32 +1150,32 @@
       character (len=*), intent(in) :: name
       real, intent(in) :: src(:)
       integer :: bmi_status
-    
+
+      bmi_status = BMI_SUCCESS
+      
       select case(name)
       case("hru_intcpstor")
          this%model%model_simulation%intcp%hru_intcpstor = src
-         bmi_status = BMI_SUCCESS
       case("soil_moist_tot")
          this%model%model_simulation%soil%soil_moist_tot = src
-         bmi_status = BMI_SUCCESS
       case("soil_to_gw")
          this%model%model_simulation%soil%soil_to_gw = src
-         bmi_status = BMI_SUCCESS
       case("ssr_to_gw")
          this%model%model_simulation%soil%ssr_to_gw = src
-         bmi_status = BMI_SUCCESS
       case("ssres_flow")
          this%model%model_simulation%soil%ssres_flow = src
-         bmi_status = BMI_SUCCESS
       case("hru_impervstor")
          this%model%model_simulation%runoff%hru_impervstor = src
-         bmi_status = BMI_SUCCESS
       case("sroff")
          this%model%model_simulation%runoff%sroff = src
-         bmi_status = BMI_SUCCESS
       case("gwres_flow")
          this%model%model_simulation%groundwater%gwres_flow = src
-         bmi_status = BMI_SUCCESS
+      case("gwres_sink")
+         this%model%model_simulation%groundwater%gwres_sink= src
+      case('gwsink_coef')
+        this%model%model_simulation%groundwater%gwsink_coef = src
+      case('gwflow_coef')
+        this%model%model_simulation%groundwater%gwflow_coef = src
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1048,17 +1187,18 @@
       character (len=*), intent(in) :: name
       double precision, intent(in) :: src(:)
       integer :: bmi_status
-    
+        
+      bmi_status = BMI_SUCCESS
+      
       select case(name)
       case("pkwater_equiv")
          this%model%model_simulation%climate%pkwater_equiv = src
-         bmi_status = BMI_SUCCESS
       case("dprst_seep_hru")
          this%model%model_simulation%runoff%dprst_seep_hru = src
-         bmi_status = BMI_SUCCESS
       case("dprst_stor_hru")
          this%model%model_simulation%runoff%dprst_stor_hru = src
-         bmi_status = BMI_SUCCESS
+      case("gwres_stor")
+         this%model%model_simulation%groundwater%gwres_stor = src
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1096,16 +1236,10 @@
     
       status = this%get_var_grid(name, gridid)
       status = this%get_grid_size(gridid, n_elements)
+        
+      bmi_status = BMI_SUCCESS
 
-      select case(name)
-      !case("plate_surface__temperature")
-      !   dest = c_loc(this%model%temperature(1,1))
-      !   call c_f_pointer(dest, dest_flattened, [this%model%n_y * this%model%n_x])
-      !   do i = 1, size(indices)
-      !      dest_flattened(indices(i)) = src(i)
-      !   end do
-      !   bmi_status = BMI_SUCCESS
-          
+      select case(name)          
           !Values below are input from surface and soil to groundwater
       case("hru_intcpstor")
         dest = c_loc(this%model%model_simulation%intcp%hru_intcpstor(1))
@@ -1113,56 +1247,66 @@
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("soil_moist_tot")
         dest = c_loc(this%model%model_simulation%soil%soil_moist_tot(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("soil_to_gw")
         dest = c_loc(this%model%model_simulation%soil%soil_to_gw(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("ssr_to_gw")
         dest = c_loc(this%model%model_simulation%soil%ssr_to_gw(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("ssres_flow")
         dest = c_loc(this%model%model_simulation%soil%ssres_flow(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("hru_impervstor")
         dest = c_loc(this%model%model_simulation%runoff%hru_impervstor(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("sroff")
         dest = c_loc(this%model%model_simulation%runoff%sroff(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("gwres_flow")
         dest = c_loc(this%model%model_simulation%groundwater%gwres_flow(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
+      case("gwres_sink")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+      case('gwsink_coef')
+        dest = c_loc(this%model%model_simulation%groundwater%gwsink_coef(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+      case('gwflow_coef')
+        dest = c_loc(this%model%model_simulation%groundwater%gwflow_coef(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1182,7 +1326,9 @@
     
       status = this%get_var_grid(name, gridid)
       status = this%get_grid_size(gridid, n_elements)
-
+        
+      bmi_status = BMI_SUCCESS
+      
       select case(name)
       case("pkwater_equiv")
         dest = c_loc(this%model%model_simulation%climate%pkwater_equiv(1))
@@ -1190,21 +1336,24 @@
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("dprst_seep_hru")
         dest = c_loc(this%model%model_simulation%runoff%dprst_seep_hru(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
       case("dprst_stor_hru")
         dest = c_loc(this%model%model_simulation%runoff%dprst_stor_hru(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-        bmi_status = BMI_SUCCESS
+      case("gwres_stor")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
       case default
          bmi_status = BMI_FAILURE
       end select
