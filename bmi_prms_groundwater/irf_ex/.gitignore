@@ -1,4 +1,9 @@
-/pipestem
-/pipestem_groundwater
-/pipestem_soil
-/pipestem_surface
+*.out
+output/
+*.bak
+*.simple1
+*.default
+*.nc
+sf_data
+*.txt
+*.swo

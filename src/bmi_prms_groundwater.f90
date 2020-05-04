@@ -317,7 +317,7 @@
         grid = 0
     case('gwsink_coef', 'gwflow_coef')
         grid = 1
-    case('has_gwstor_minearea')
+    case('has_gwstor_minarea')
         grid = 2
     case('nowtime')
         grid = 3
@@ -524,6 +524,8 @@
       integer, intent(out) :: count
       integer :: bmi_status
 
+      bmi_status = BMI_SUCCESS
+      
       select case(grid)
       case(0:3)
          bmi_status = this%get_grid_size(grid, count)
@@ -540,6 +542,8 @@
       integer, intent(out) :: count
       integer :: bmi_status
 
+      bmi_status = BMI_SUCCESS
+      
       select case(grid)
       case (0:3)
          bmi_status = this%get_grid_node_count(grid, count)
@@ -556,11 +560,12 @@
       integer, intent(in) :: grid
       integer, intent(out) :: count
       integer :: bmi_status
-
+    
+      bmi_status = BMI_SUCCESS
+      
       select case(grid)
       case (0:3)
          count = 0
-         bmi_status = BMI_SUCCESS
       case default
          count = -1
          bmi_status = BMI_FAILURE
@@ -573,7 +578,7 @@
       integer, intent(in) :: grid
       integer, dimension(:), intent(out) :: edge_nodes
       integer :: bmi_status
-
+      
       select case(grid)
       case default
          edge_nodes(:) = -1
@@ -641,9 +646,7 @@
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
         'gw_upslope', 'hru_storage', 'hru_storage_ante')
         type = "double precision"
-    case('has_gwstor_minarea')
-        type = 'logical'
-    case('nowtime')
+    case('nowtime','has_gwstor_minarea')
         type = "integer"
     case default
         type = "-"
@@ -674,7 +677,6 @@
         units = 'fraction/day'
     case default
         units = "-"
-        bmi_status = BMI_FAILURE
     end select
     end function prms_var_units
 
@@ -784,7 +786,7 @@
 
         select case(name)
         case default
-           location = "face"
+           location = "node"
            bmi_status = BMI_SUCCESS
         end select
     end function prms_var_location
@@ -799,7 +801,11 @@
       
       select case(name)
       case('has_gwstor_minarea')
-        dest = [this%model%model_simulation%groundwater%has_gwstor_minarea]
+          if(this%model%model_simulation%groundwater%has_gwstor_minarea.eqv..false.) then
+              dest = [0]
+          else
+              dest = [1]
+          endif
       case('nowtime')
         dest = [this%model%model_simulation%model_time%nowtime]
       case default
@@ -830,7 +836,7 @@
         if(this%model%control_data%cascadegw_flag%value > 0) then 
             dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
         else
-            dest = [-1.d0]
+            dest = [-1.0]
             bmi_status = BMI_FAILURE
         endif
       case default
@@ -864,7 +870,7 @@
             dest = [this%model%model_simulation%groundwater%gw_upslope]
         else
             dest = [-1.d0]
-            bmi_status = BMI_FAILURE
+            bmi_status = BMI_SUCCESS
         endif
     case('hru_storage')
         dest = [this%model%model_simulation%groundwater%hru_storage]
@@ -1166,8 +1172,6 @@
          this%model%model_simulation%groundwater%gwres_flow = src
       case("gwres_sink")
          this%model%model_simulation%groundwater%gwres_sink= src
-      case("gwres_stor")
-         this%model%model_simulation%groundwater%gwres_stor = src
       case('gwsink_coef')
         this%model%model_simulation%groundwater%gwsink_coef = src
       case('gwflow_coef')
@@ -1193,6 +1197,8 @@
          this%model%model_simulation%runoff%dprst_seep_hru = src
       case("dprst_stor_hru")
          this%model%model_simulation%runoff%dprst_stor_hru = src
+      case("gwres_stor")
+         this%model%model_simulation%groundwater%gwres_stor = src
       case default
          bmi_status = BMI_FAILURE
       end select
@@ -1289,12 +1295,6 @@
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
         end do
-      case("gwres_stor")
-        dest = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
-        call c_f_pointer(dest, dest_flattened, [n_elements])
-        do i = 1, size(inds)
-            dest_flattened(inds(i)) = src(i)
-        end do
       case('gwsink_coef')
         dest = c_loc(this%model%model_simulation%groundwater%gwsink_coef(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
@@ -1344,6 +1344,12 @@
         end do
       case("dprst_stor_hru")
         dest = c_loc(this%model%model_simulation%runoff%dprst_stor_hru(1))
+        call c_f_pointer(dest, dest_flattened, [n_elements])
+        do i = 1, size(inds)
+            dest_flattened(inds(i)) = src(i)
+        end do
+      case("gwres_stor")
+        dest = c_loc(this%model%model_simulation%groundwater%gwres_stor(1))
         call c_f_pointer(dest, dest_flattened, [n_elements])
         do i = 1, size(inds)
             dest_flattened(inds(i)) = src(i)
