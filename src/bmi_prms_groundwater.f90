@@ -126,7 +126,7 @@
     'gwres_flow        ', & !r32 by nhru
         !output vars used in calibration
     'gwsink_coef       ', & !r32 by ngw
-    'gflow_coef        ', & !r32 by ngw
+    'gwflow_coef       ', & !r32 by ngw
         !output vars used in water-balanc module
     'gwin_dprst        ', & !r64 by nhru
     'gwres_in          ', & !r64 by nhru
@@ -870,7 +870,7 @@
             dest = [this%model%model_simulation%groundwater%gw_upslope]
         else
             dest = [-1.d0]
-            bmi_status = BMI_SUCCESS
+            bmi_status = BMI_FAILURE
         endif
     case('hru_storage')
         dest = [this%model%model_simulation%groundwater%hru_storage]
