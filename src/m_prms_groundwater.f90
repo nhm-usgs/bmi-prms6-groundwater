@@ -144,7 +144,7 @@
         !else
         !    call solve_prms(model) 
         !endif
-    if(this%model_time%next(ctl_data)) then
+    if(this%model_time%next()) then
         call solve_prms(model)
     endif
     end associate
