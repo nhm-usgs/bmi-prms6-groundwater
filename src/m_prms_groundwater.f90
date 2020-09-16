@@ -10,7 +10,6 @@
     ! use ieee_features
     implicit none
     type :: prms_groundwater_model
-        character(len=:), allocatable :: control_filename
         !! Name of the control file
         type(Control) :: control_data
         !! Class of control file related parameters
@@ -56,8 +55,7 @@
         start_ct => model%start_ct, end_ct => model%end_ct, &
         control_data => model%control_data, &
         parameter_data => model%parameter_data, &
-        model_simulation => model%model_simulation, &
-        control_filename => model%control_filename)
+        model_simulation => model%model_simulation)
         call system_clock(count=start_rtc, count_rate=rate_rtc, count_max=max_rtc)
         call cpu_time(time=start_ct)
 
@@ -72,7 +70,6 @@
 
         ! print *, 'r32 array memory footprint (109951 x 13505):', c_sizeof(arr_dummy_r32)
         write(output_unit, fmt='(a)') repeat('=', 72)
-        !call get_control_filename(control_filename)
 
         !control_data = Control(config_file)
         call Control_data%init(config_file)
@@ -144,7 +141,7 @@
         !else
         !    call solve_prms(model) 
         !endif
-    if(this%model_time%next(ctl_data)) then
+    if(this%model_time%next()) then
         call solve_prms(model)
     endif
     end associate
