@@ -91,7 +91,7 @@
 
     ! Exchange items
     integer, parameter :: input_item_count = 15
-    integer, parameter :: output_item_count = 15
+    integer, parameter :: output_item_count = 13
     character (len=BMI_MAX_VAR_NAME), target, &
         dimension(input_item_count) :: input_items = (/ &
         
@@ -133,8 +133,8 @@
     'gwres_stor        ', & !r64 by nhru
     'gwres_stor_ante   ', & !r64 by nhru
     'gwstor_minarea_wb ', & !r64 by nhru
-    'gw_upslope        ', & !r64 by nhru
-    'hru_gw_cascadeflow', & !r32 by nhru
+    ! 'gw_upslope        ', & !r64 by nhru
+    ! 'hru_gw_cascadeflow', & !r32 by nhru
     'hru_storage       ', & !r64 by nhru
     'hru_storage_ante  ', & !r64 by nhru
     'gwres_sink        ', & !r32 by nhru
@@ -312,8 +312,9 @@
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
         'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
         'gwres_sink', 'gwres_stor', 'gwin_dprst', 'gwres_in', &
-        'gwres_stor_ante', 'gwstor_minarea_wb', 'gw_upslope', &
-        'hru_gw_cascadeflow', 'hru_storage', 'hru_storage_ante')
+        'gwres_stor_ante', 'gwstor_minarea_wb', &
+        'hru_storage', 'hru_storage_ante')
+        ! 'gw_upslope', 'hru_gw_cascadeflow', 
         grid = 0
     case('gwsink_coef', 'gwflow_coef')
         grid = 1
@@ -640,11 +641,13 @@
     select case(name)
     case('hru_intcpstor', 'soil_moist_tot', 'soil_to_gw', &
         'ssr_to_gw', 'ssres_flow', 'hru_impervstor', 'sroff', 'gwres_flow', &
-        'gwsink_coef', 'gwflow_coef', 'gwres_sink', 'hru_gw_cascadeflow')
+        'gwsink_coef', 'gwflow_coef', 'gwres_sink')
+        ! , 'hru_gw_cascadeflow'  
         type = "real"
     case('pkwater_equiv',  'dprst_seep_hru', 'dprst_stor_hru', &
         'gwin_dprst', 'gwres_in', 'gwres_stor', 'gwres_stor_ante', 'gwstor_minarea_wb', &
-        'gw_upslope', 'hru_storage', 'hru_storage_ante')
+       'hru_storage', 'hru_storage_ante')
+        !   'gw_upslope',
         type = "double precision"
     case('nowtime','has_gwstor_minarea')
         type = "integer"
@@ -668,13 +671,13 @@
         'soil_to_gw', 'ssr_to_gw', 'ssres_flow', 'dprst_seep_hru', &
         'dprst_stor_hru', 'hru_impervstor', 'sroff', 'gwres_flow', &
         'gwres_sink', 'gwres_stor', 'gwstor_minarea_wb', &
-        'hru_gw_cascadeflow', 'hru_storage', 'gwin_dprst', &
+        'hru_storage', 'gwin_dprst', &
         'gwres_stor_ante', 'hru_storage_ante')
         units = "in"
-    case('gwres_in', 'gw_upslope')
+    case('gwres_in') ! 'gw_upslope', 'hru_gw_cascadeflow', 
         units = 'acre-inches'
     case('gwsink_coef', 'gwflow_coef')
-        units = 'fraction/day'
+        units = '1/day'
     case default
         units = "-"
     end select
@@ -732,20 +735,20 @@
         size = sizeof(this%model%model_simulation%groundwater%gwres_stor_ante(1)) 
       case('gwstor_minarea_wb')
         size = sizeof(this%model%model_simulation%groundwater%gwstor_minarea_wb(1)) 
-      case('gw_upslope')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            size = sizeof(this%model%model_simulation%groundwater%gw_upslope(1)) 
-        else
-            size = -1
-            bmi_status = BMI_FAILURE
-        endif
-      case('hru_gw_cascadeflow')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1)) 
-        else
-            size = -1
-            bmi_status = BMI_FAILURE
-        endif
+    !   case('gw_upslope')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         size = sizeof(this%model%model_simulation%groundwater%gw_upslope(1)) 
+    !     else
+    !         size = -1
+    !         bmi_status = BMI_FAILURE
+    !     endif
+    !   case('hru_gw_cascadeflow')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         size = sizeof(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1)) 
+    !     else
+    !         size = -1
+    !         bmi_status = BMI_FAILURE
+    !     endif
       case('hru_storage')
         size = sizeof(this%model%model_simulation%groundwater%hru_storage(1)) 
       case('hru_storage_ante')
@@ -832,13 +835,13 @@
           dest = [this%model%model_simulation%groundwater%gwsink_coef]
       case('gwflow_coef')
           dest = [this%model%model_simulation%groundwater%gwflow_coef]
-      case('hru_gw_cascadeflow')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
-        else
-            dest = [-1.0]
-            bmi_status = BMI_FAILURE
-        endif
+    !   case('hru_gw_cascadeflow')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         dest = [this%model%model_simulation%groundwater%hru_gw_cascadeflow]
+    !     else
+    !         dest = [-1.0]
+    !         bmi_status = BMI_FAILURE
+    !     endif
       case default
          dest = [-1.0]
          bmi_status = BMI_FAILURE
@@ -865,13 +868,13 @@
         dest = [this%model%model_simulation%groundwater%gwres_stor_ante]
     case('gwstor_minarea_wb')
         dest = [this%model%model_simulation%groundwater%gwstor_minarea_wb]
-    case('gw_upslope')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            dest = [this%model%model_simulation%groundwater%gw_upslope]
-        else
-            dest = [-1.d0]
-            bmi_status = BMI_FAILURE
-        endif
+    ! case('gw_upslope')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         dest = [this%model%model_simulation%groundwater%gw_upslope]
+    !     else
+    !         dest = [-1.d0]
+    !         bmi_status = BMI_FAILURE
+    !     endif
     case('hru_storage')
         dest = [this%model%model_simulation%groundwater%hru_storage]
     case('hru_storage_ante')
@@ -921,13 +924,13 @@
     case('gwres_sink')
         src = c_loc(this%model%model_simulation%groundwater%gwres_sink(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-    case('hru_gw_cascadeflow')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
-            call c_f_pointer(src, dest_ptr, [n_elements])
-        else
-            bmi_status = BMI_FAILURE
-        endif
+    ! case('hru_gw_cascadeflow')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
+    !         call c_f_pointer(src, dest_ptr, [n_elements])
+    !     else
+    !         bmi_status = BMI_FAILURE
+    !     endif
     case default
         bmi_status = BMI_FAILURE
     end select
@@ -963,13 +966,13 @@
     case('gwstor_minarea_wb')
         src = c_loc(this%model%model_simulation%groundwater%gwstor_minarea_wb(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
-    case('gw_upslope')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
-            call c_f_pointer(src, dest_ptr, [n_elements])
-        else
-            bmi_status = BMI_FAILURE
-        endif
+    ! case('gw_upslope')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
+    !         call c_f_pointer(src, dest_ptr, [n_elements])
+    !     else
+    !         bmi_status = BMI_FAILURE
+    !     endif
     case('hru_storage')
         src = c_loc(this%model%model_simulation%groundwater%hru_storage(1))
         call c_f_pointer(src, dest_ptr, [n_elements])
@@ -1041,16 +1044,16 @@
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-    case('hru_gw_cascadeflow')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
-            call c_f_pointer(src, src_flattened, [n_elements])
-            do i = 1,  size(inds)
-                dest(i) = src_flattened(inds(i))
-            end do
-        else
-            bmi_status = BMI_FAILURE
-        endif
+    ! case('hru_gw_cascadeflow')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         src = c_loc(this%model%model_simulation%groundwater%hru_gw_cascadeflow(1))
+    !         call c_f_pointer(src, src_flattened, [n_elements])
+    !         do i = 1,  size(inds)
+    !             dest(i) = src_flattened(inds(i))
+    !         end do
+    !     else
+    !         bmi_status = BMI_FAILURE
+    !     endif
     case default
         bmi_status = BMI_FAILURE
     end select
@@ -1104,16 +1107,16 @@
         do i = 1,  size(inds)
             dest(i) = src_flattened(inds(i))
         end do
-    case('gw_upslope')
-        if(this%model%control_data%cascadegw_flag%value > 0) then 
-            src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
-            call c_f_pointer(src, src_flattened, [n_elements])
-            do i = 1,  size(inds)
-                dest(i) = src_flattened(inds(i))
-            end do
-        else
-            bmi_status = BMI_FAILURE
-        endif
+    ! case('gw_upslope')
+    !     if(this%model%control_data%cascadegw_flag%value > 0) then 
+    !         src = c_loc(this%model%model_simulation%groundwater%gw_upslope(1))
+    !         call c_f_pointer(src, src_flattened, [n_elements])
+    !         do i = 1,  size(inds)
+    !             dest(i) = src_flattened(inds(i))
+    !         end do
+    !     else
+    !         bmi_status = BMI_FAILURE
+    !     endif
     case('hru_storage')
         src = c_loc(this%model%model_simulation%groundwater%hru_storage(1))
         call c_f_pointer(src, src_flattened, [n_elements])
